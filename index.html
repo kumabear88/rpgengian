@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 奕安老師的英語課堂 RPG 🌟</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 基礎設定與動畫 */
+        body { font-family: 'Comic Sans MS', 'Microsoft JhengHei', sans-serif; background-color: #f8fafc; overflow-x: hidden; }
+        
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+            70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        @keyframes bounce-sm { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        @keyframes float-up { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.5); } }
+        @keyframes screen-shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .anim-pulse { animation: pulse-ring 2s infinite; }
+        .anim-bounce { animation: bounce-sm 1s ease-in-out infinite; }
+        .floating-text { position: absolute; font-weight: bold; font-size: 2rem; pointer-events: none; animation: float-up 1s ease-out forwards; z-index: 100; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .shake-screen { animation: screen-shake 0.5s; }
+
+        /* 卡片與職業樣式 */
+        .student-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 3px solid transparent; }
+        .student-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #93c5fd; }
+        .student-card.selected { border-color: #3b82f6; transform: scale(1.05); box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.3); z-index: 10; }
+        
+        .class-bg-hero { background: linear-gradient(135deg, #fecaca 0%, #fee2e2 100%); }
+        .class-bg-magician { background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%); }
+        .class-bg-royal { background: linear-gradient(135deg, #fef08a 0%, #fef9c3 100%); }
+        .class-bg-hunter { background: linear-gradient(135deg, #bbf7d0 0%, #dcfce3 100%); }
+        .class-bg-beast { background: linear-gradient(135deg, #fed7aa 0%, #ffedd5 100%); }
+        .class-bg-none { background: #f1f5f9; }
+
+        /* 模態視窗 */
+        .modal-overlay { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+        .modal-content { animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes slideUp { from { transform: translateY(50px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+        /* 彩帶特效 */
+        #confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+        .confetti-piece { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: fall linear forwards; }
+        .confetti-piece.circle { border-radius: 50%; }
+        @keyframes fall { 0% { transform: translateY(-20px) rotate(0deg) rotateX(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg) rotateX(360deg); opacity: 0; } }
+
+        /* 輸入框樣式 */
+        .editable-name { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2px; cursor: pointer; transition: 0.2s; }
+        .editable-name:hover { border-color: #3b82f6; color: #1e40af; background: #eff6ff; border-radius: 4px; padding: 0 4px; }
+        .name-input { background: #fff; border: 2px solid #3b82f6; border-radius: 6px; padding: 2px 8px; font-size: inherit; font-weight: inherit; outline: none; width: 150px; text-align: center; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1); }
+
+        /* 職業進化軌跡網格 */
+        .evolution-grid { display: grid; grid-template-columns: 80px repeat(5, 1fr); gap: 8px; align-items: center; text-align: center; }
+        .evo-cell { padding: 8px 4px; background: #fff; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .evo-header { font-size: 0.75rem; font-weight: bold; color: #64748b; background: #f8fafc; border: none; }
+        .evo-title { font-weight: bold; font-size: 0.85rem; color: #334155; text-align: right; padding-right: 8px; }
+    </style>
+</head>
+<body>
+    <div id="confetti-container"></div>
+
+    <!-- UI Root -->
+    <div id="app-root" class="min-h-screen pb-24">
+        <!-- 頂部導航 -->
+        <nav class="bg-white shadow-sm sticky top-0 z-40 border-b-4 border-blue-500">
+            <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl anim-bounce">🎓</span>
+                    <div>
+                        <h1 class="font-bold text-xl text-slate-800 leading-tight">ClassQuest RPG</h1>
+                        <p class="text-xs text-blue-600 font-bold">奕安老師的英語魔法教室</p>
+                    </div>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <!-- 連線狀態指示燈 -->
+                    <div id="sync-status" class="hidden sm:flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-full text-xs font-bold text-slate-500 border border-slate-200">
+                        <span class="w-2 h-2 rounded-full bg-slate-400" id="sync-dot"></span>
+                        <span id="sync-text">Loading...</span>
+                    </div>
+
+                    <button onclick="CQ.showRules()" class="px-4 py-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded-lg font-bold text-sm transition-colors flex items-center gap-1 shadow-sm">
+                        <span>📖</span> <span class="hidden sm:inline">遊戲規則</span>
+                    </button>
+                    <button onclick="CQ.switchView('report')" id="btn-nav-report" class="px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-lg font-bold text-sm transition-colors flex items-center gap-1 shadow-sm">
+                        <span>📊</span> <span class="hidden sm:inline">歷史報表</span>
+                    </button>
+                    <button onclick="CQ.switchView('edit')" id="btn-nav-edit" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-bold text-sm transition-colors flex items-center gap-1 shadow-sm">
+                        <span>✏️</span> <span class="hidden sm:inline">編輯名單</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主視圖：班級與學生列表 -->
+        <main id="view-main" class="max-w-7xl mx-auto px-4 py-6">
+            <!-- 班級選擇與工具列 -->
+            <div class="flex flex-wrap gap-4 justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 relative">
+                
+                <!-- 第一週提示掛飾 -->
+                <div class="absolute -bottom-3 -right-3 bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-lg border-2 border-white transform rotate-[-5deg] z-20">
+                    <div class="flex items-center gap-1"><span>📌</span> 115學年度 第1學期</div>
+                    <div class="text-[10px] opacity-90 mt-0.5">Week 1 (9/3 軍人節無放假)</div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <label class="font-bold text-slate-600 text-lg">🏫 選擇班級 (Class):</label>
+                    <select id="class-selector" onchange="CQ.changeClass(this.value)" class="bg-blue-50 border-2 border-blue-200 text-blue-800 font-bold text-lg rounded-xl px-4 py-2 outline-none focus:border-blue-500 cursor-pointer shadow-sm">
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="CQ.awardSelectedModal()" class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-sm transition-transform active:scale-95 flex items-center gap-2 text-lg">
+                        <span class="text-xl">🌟</span> 多選加分
+                    </button>
+                    <button onclick="CQ.clearSelection()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl shadow-sm transition-transform active:scale-95">
+                        取消選取
+                    </button>
+                </div>
+            </div>
+
+            <!-- 學生網格 -->
+            <div id="student-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 relative">
+                <!-- 學生卡片由 JS 產生 -->
+            </div>
+        </main>
+
+        <!-- 視圖：編輯名單後台 -->
+        <main id="view-edit" class="hidden max-w-5xl mx-auto px-4 py-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2"><span>✏️</span> 名單管理與英文名設定</h2>
+                    <button onclick="CQ.switchView('main')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold text-slate-700">🔙 返回教室</button>
+                </div>
+
+                <div class="flex items-center gap-3 mb-6">
+                    <select id="edit-class-selector" onchange="CQ.renderEditList()" class="bg-slate-50 border-2 border-slate-200 text-slate-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
+                </div>
+
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6 flex flex-wrap gap-3 items-end">
+                    <div>
+                        <label class="block text-xs font-bold text-blue-600 mb-1">座號 Seat</label>
+                        <input type="number" id="new-seat" class="w-20 px-3 py-2 rounded-lg border border-slate-300 outline-none focus:border-blue-500" placeholder="01">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-blue-600 mb-1">中文名 Name</label>
+                        <input type="text" id="new-name" class="w-32 px-3 py-2 rounded-lg border border-slate-300 outline-none focus:border-blue-500" placeholder="王小明">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-blue-600 mb-1">英文名 English (選填)</label>
+                        <input type="text" id="new-en" class="w-32 px-3 py-2 rounded-lg border border-slate-300 outline-none focus:border-blue-500" placeholder="Kevin">
+                    </div>
+                    <button onclick="CQ.addStudent()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm">➕ 新增</button>
+                </div>
+
+                <div class="overflow-x-auto border-2 border-slate-100 rounded-xl">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                                <th class="p-3 border-b-2">座號</th>
+                                <th class="p-3 border-b-2">中文名</th>
+                                <th class="p-3 border-b-2">英文名 (點擊可修改)</th>
+                                <th class="p-3 border-b-2">職業</th>
+                                <th class="p-3 border-b-2">XP / 今日加分</th>
+                                <th class="p-3 border-b-2 text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="edit-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- 視圖：歷史報表後台 -->
+        <main id="view-report" class="hidden max-w-5xl mx-auto px-4 py-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+                <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                    <h2 class="text-2xl font-bold text-indigo-800 flex items-center gap-2"><span>📊</span> 課堂歷史報表 (Report)</h2>
+                    <div class="flex gap-2">
+                        <button onclick="CQ.exportCSV()" class="px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg font-bold text-sm flex items-center gap-1">
+                            <span>📥</span> 匯出成 Excel (CSV)
+                        </button>
+                        <button onclick="CQ.switchView('main')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold text-slate-700">🔙 返回教室</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-4 mb-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                    <div>
+                        <label class="block text-xs font-bold text-indigo-600 mb-1">📅 查詢週次</label>
+                        <select id="report-week-selector" onchange="CQ.renderReport()" class="bg-white border-2 border-indigo-200 text-indigo-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-indigo-600 mb-1">🏫 班級</label>
+                        <select id="report-class-selector" onchange="CQ.renderReport()" class="bg-white border-2 border-indigo-200 text-indigo-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
+                    </div>
+                    <div class="ml-auto flex items-center">
+                        <div class="text-sm text-slate-500 bg-white px-3 py-2 rounded-lg border border-slate-200">
+                            公式說明：平時成績 = 基本分(75) + XP加成(每點0.5分) + 本週加分總和
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border-2 border-slate-100 rounded-xl">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-indigo-100 text-indigo-800 text-sm">
+                                <th class="p-3 border-b-2">座號</th>
+                                <th class="p-3 border-b-2">姓名</th>
+                                <th class="p-3 border-b-2">職業與等級</th>
+                                <th class="p-3 border-b-2 text-green-600">本週獲得加分 (+)</th>
+                                <th class="p-3 border-b-2 text-red-500">本週扣除分數 (-)</th>
+                                <th class="p-3 border-b-2 text-indigo-600">本週結算分數</th>
+                                <th class="p-3 border-b-2 text-amber-600 bg-amber-50">試算平時成績</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 彈出視窗：學生操作面板 (單人面板 / 包含選職業) -->
+    <div id="student-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden modal-content shadow-2xl border-4 border-white flex flex-col max-h-[90vh]">
+            
+            <div id="modal-header" class="p-6 relative text-center">
+                <button onclick="CQ.closeModal()" class="absolute top-4 right-4 w-10 h-10 bg-white/50 hover:bg-white/80 rounded-full flex items-center justify-center text-slate-600 font-bold text-xl backdrop-blur transition-colors">✕</button>
+                
+                <div class="w-24 h-24 mx-auto bg-white rounded-full flex items-center justify-center text-5xl shadow-lg border-4 border-white mb-3 relative" id="modal-avatar">
+                </div>
+                
+                <h2 class="text-3xl font-bold text-slate-800 mb-1 flex items-center justify-center gap-2">
+                    <span id="modal-en-name" class="editable-name" onclick="CQ.editEnNameInModal()"></span>
+                    <input type="text" id="modal-en-input" class="hidden name-input" onblur="CQ.saveEnNameFromModal()" onkeypress="if(event.key==='Enter') CQ.saveEnNameFromModal()">
+                    <span id="modal-zh-name" class="text-xl text-slate-500 font-normal"></span>
+                </h2>
+                
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white/60 backdrop-blur rounded-full text-slate-700 font-bold text-sm shadow-sm">
+                    <span id="modal-seat-info">Seat --</span> | 
+                    <span id="modal-class-info" class="text-blue-700"></span> 
+                    <span id="modal-xp-info" class="text-amber-600 ml-1"></span>
+                </div>
+            </div>
+
+            <div class="p-6 overflow-y-auto bg-slate-50 flex-1">
+                
+                <!-- 選擇職業區 (未轉職顯示) -->
+                <div id="section-choose-class" class="hidden">
+                    <div class="text-center mb-4">
+                        <span class="text-sm font-bold text-indigo-600 bg-indigo-100 px-4 py-1 rounded-full tracking-wider">選擇英語單詞職業 (CHOOSE YOUR JOB)</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <button onclick="CQ.setJob('hero')" class="p-4 bg-white rounded-xl border-2 border-red-100 hover:border-red-400 hover:bg-red-50 text-center transition-all">
+                            <div class="text-4xl mb-2">⚔️</div><div class="font-bold text-slate-800 text-lg">Hero</div><div class="text-xs text-slate-500">戰士 (英雄)</div>
+                        </button>
+                        <button onclick="CQ.setJob('magician')" class="p-4 bg-white rounded-xl border-2 border-indigo-100 hover:border-indigo-400 hover:bg-indigo-50 text-center transition-all">
+                            <div class="text-4xl mb-2">🪄</div><div class="font-bold text-slate-800 text-lg">Magician</div><div class="text-xs text-slate-500">魔法師</div>
+                        </button>
+                        <button onclick="CQ.setJob('royal')" class="p-4 bg-white rounded-xl border-2 border-yellow-100 hover:border-yellow-400 hover:bg-yellow-50 text-center transition-all">
+                            <div class="text-4xl mb-2">👑</div><div class="font-bold text-slate-800 text-lg">Prince/Princess</div><div class="text-xs text-slate-500">王子/公主</div>
+                        </button>
+                        <button onclick="CQ.setJob('hunter')" class="p-4 bg-white rounded-xl border-2 border-green-100 hover:border-green-400 hover:bg-green-50 text-center transition-all">
+                            <div class="text-4xl mb-2">🏹</div><div class="font-bold text-slate-800 text-lg">Hunter</div><div class="text-xs text-slate-500">獵人 (遊俠)</div>
+                        </button>
+                        <button onclick="CQ.setJob('beast')" class="p-4 bg-white rounded-xl border-2 border-orange-100 hover:border-orange-400 hover:bg-orange-50 text-center transition-all">
+                            <div class="text-4xl mb-2">🐾</div><div class="font-bold text-slate-800 text-lg">Beast</div><div class="text-xs text-slate-500">野獸大師</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 單人加扣分區 (已轉職顯示) -->
+                <div id="section-give-points" class="hidden space-y-6">
+                    <div>
+                        <div class="flex items-center gap-2 mb-3 px-2">
+                            <div class="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold">+</div>
+                            <span class="font-bold text-green-700 tracking-wide text-sm">POSITIVE BEHAVIOR (加分項目)</span>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <button onclick="CQ.awardPoint(1, 'Good Answer')" class="bg-white p-3 rounded-xl border-2 border-green-100 hover:border-green-400 hover:bg-green-50 transition-all text-center group">
+                                <div class="w-12 h-12 mx-auto bg-green-100 rounded-full flex items-center justify-center text-xl text-green-600 mb-2 group-hover:scale-110 transition-transform">💬</div>
+                                <div class="font-bold text-slate-700 text-sm">Good Answer</div><div class="text-xs text-green-600 mt-1">好回答 +1</div>
+                            </button>
+                            <button onclick="CQ.awardPoint(1, 'Teamwork')" class="bg-white p-3 rounded-xl border-2 border-teal-100 hover:border-teal-400 hover:bg-teal-50 transition-all text-center group">
+                                <div class="w-12 h-12 mx-auto bg-teal-100 rounded-full flex items-center justify-center text-xl text-teal-600 mb-2 group-hover:scale-110 transition-transform">🤝</div>
+                                <div class="font-bold text-slate-700 text-sm">Teamwork</div><div class="text-xs text-teal-600 mt-1">團隊合作 +1</div>
+                            </button>
+                            <button onclick="CQ.awardPoint(2, 'English Only')" class="bg-white p-3 rounded-xl border-2 border-emerald-100 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-center group">
+                                <div class="w-12 h-12 mx-auto bg-emerald-100 rounded-full flex items-center justify-center text-xl text-emerald-600 mb-2 group-hover:scale-110 transition-transform">🗣️</div>
+                                <div class="font-bold text-slate-700 text-sm">English Only</div><div class="text-xs text-emerald-600 mt-1">努力說英文 +2</div>
+                            </button>
+                            <button onclick="CQ.awardPoint(3, 'Perfect!')" class="bg-white p-3 rounded-xl border-2 border-yellow-200 hover:border-yellow-400 hover:bg-yellow-50 transition-all text-center group shadow-sm">
+                                <div class="w-12 h-12 mx-auto bg-yellow-100 rounded-full flex items-center justify-center text-xl text-yellow-600 mb-2 group-hover:scale-110 transition-transform anim-pulse">⭐</div>
+                                <div class="font-bold text-amber-700 text-sm">Perfect!</div><div class="text-xs text-yellow-600 mt-1">完美表現 +3</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center gap-2 mb-3 px-2">
+                            <div class="w-6 h-6 rounded-full bg-red-100 text-red-500 flex items-center justify-center font-bold">-</div>
+                            <span class="font-bold text-red-500 tracking-wide text-sm">NEEDS WORK (扣分項目)</span>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <button onclick="CQ.deductPoint(-1, 'Off Task')" class="bg-white p-3 rounded-xl border-2 border-red-50 hover:border-red-300 hover:bg-red-50 transition-all text-center group">
+                                <div class="w-10 h-10 mx-auto bg-slate-100 rounded-full flex items-center justify-center text-lg text-slate-400 mb-2 group-hover:text-red-500 transition-colors">👻</div>
+                                <div class="font-bold text-slate-600 text-sm">Off Task</div><div class="text-xs text-red-400 mt-1">發呆分心 -1</div>
+                            </button>
+                            <button onclick="CQ.deductPoint(-1, 'Chinese')" class="bg-white p-3 rounded-xl border-2 border-red-50 hover:border-red-300 hover:bg-red-50 transition-all text-center group">
+                                <div class="w-10 h-10 mx-auto bg-slate-100 rounded-full flex items-center justify-center text-lg text-slate-400 mb-2 group-hover:text-red-500 transition-colors">🙊</div>
+                                <div class="font-bold text-slate-600 text-sm">Chinese</div><div class="text-xs text-red-400 mt-1">講中文 -1</div>
+                            </button>
+                            <button onclick="CQ.deductPoint(-1, 'Disruptive')" class="bg-white p-3 rounded-xl border-2 border-red-50 hover:border-red-300 hover:bg-red-50 transition-all text-center group">
+                                <div class="w-10 h-10 mx-auto bg-slate-100 rounded-full flex items-center justify-center text-lg text-slate-400 mb-2 group-hover:text-red-500 transition-colors">⚡</div>
+                                <div class="font-bold text-slate-600 text-sm">Disruptive</div><div class="text-xs text-red-400 mt-1">干擾上課 -1</div>
+                            </button>
+                            <button onclick="CQ.deductPoint(-2, 'Unprepared')" class="bg-white p-3 rounded-xl border-2 border-red-50 hover:border-red-300 hover:bg-red-50 transition-all text-center group">
+                                <div class="w-10 h-10 mx-auto bg-slate-100 rounded-full flex items-center justify-center text-lg text-slate-400 mb-2 group-hover:text-red-500 transition-colors">🎒</div>
+                                <div class="font-bold text-slate-600 text-sm">Unprepared</div><div class="text-xs text-red-400 mt-1">未帶學用品 -2</div>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right mt-4 pt-4 border-t border-slate-200">
+                        <button onclick="CQ.resetJob()" class="text-xs text-slate-400 hover:text-red-500 underline">↻ 重新選擇職業</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 彈出視窗：多選加分專用面板 -->
+    <div id="multi-award-modal" class="fixed inset-0 modal-overlay hidden z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden modal-content shadow-2xl border-4 border-white flex flex-col">
+            <div class="p-6 bg-blue-600 text-white text-center relative">
+                <button onclick="CQ.closeMultiAwardModal()" class="absolute top-4 right-4 w-10 h-10 bg-blue-800/50 hover:bg-blue-800 rounded-full flex items-center justify-center font-bold text-xl transition-colors">✕</button>
+                <h2 class="text-2xl font-bold flex items-center justify-center gap-2">🌟 為多位學生加分</h2>
+                <p class="mt-2 text-blue-100">已選取 <span id="multi-award-count" class="font-bold text-yellow-300 text-lg">0</span> 位學生</p>
+            </div>
+            
+            <div class="p-6 bg-slate-50">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button onclick="CQ.awardPoint(1, 'Good Answer')" class="bg-white p-3 rounded-xl border-2 border-green-100 hover:border-green-400 hover:bg-green-50 transition-all text-center group">
+                        <div class="w-12 h-12 mx-auto bg-green-100 rounded-full flex items-center justify-center text-xl text-green-600 mb-2 group-hover:scale-110 transition-transform">💬</div>
+                        <div class="font-bold text-slate-700 text-sm">Good Answer</div><div class="text-xs text-green-600 mt-1">全體 +1</div>
+                    </button>
+                    <button onclick="CQ.awardPoint(1, 'Teamwork')" class="bg-white p-3 rounded-xl border-2 border-teal-100 hover:border-teal-400 hover:bg-teal-50 transition-all text-center group">
+                        <div class="w-12 h-12 mx-auto bg-teal-100 rounded-full flex items-center justify-center text-xl text-teal-600 mb-2 group-hover:scale-110 transition-transform">🤝</div>
+                        <div class="font-bold text-slate-700 text-sm">Teamwork</div><div class="text-xs text-teal-600 mt-1">全體 +1</div>
+                    </button>
+                    <button onclick="CQ.awardPoint(2, 'English Only')" class="bg-white p-3 rounded-xl border-2 border-emerald-100 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-center group">
+                        <div class="w-12 h-12 mx-auto bg-emerald-100 rounded-full flex items-center justify-center text-xl text-emerald-600 mb-2 group-hover:scale-110 transition-transform">🗣️</div>
+                        <div class="font-bold text-slate-700 text-sm">English Only</div><div class="text-xs text-emerald-600 mt-1">全體 +2</div>
+                    </button>
+                    <button onclick="CQ.awardPoint(3, 'Perfect!')" class="bg-white p-3 rounded-xl border-2 border-yellow-200 hover:border-yellow-400 hover:bg-yellow-50 transition-all text-center group shadow-sm">
+                        <div class="w-12 h-12 mx-auto bg-yellow-100 rounded-full flex items-center justify-center text-xl text-yellow-600 mb-2 group-hover:scale-110 transition-transform anim-pulse">⭐</div>
+                        <div class="font-bold text-amber-700 text-sm">Perfect!</div><div class="text-xs text-yellow-600 mt-1">全體 +3</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 彈出視窗：遊戲規則/等級說明 -->
+    <div id="rules-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-4xl overflow-hidden modal-content shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="bg-indigo-600 p-6 relative text-center text-white shrink-0">
+                <button onclick="CQ.closeRules()" class="absolute top-4 right-4 w-10 h-10 bg-indigo-800/50 hover:bg-indigo-800 rounded-full flex items-center justify-center font-bold text-xl transition-colors">✕</button>
+                <h2 class="text-2xl font-bold">📖 ClassQuest 遊戲規則與進化表</h2>
+                <p class="text-indigo-200 mt-1">努力表現，看看你能進化成什麼樣子！</p>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-50">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                        <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100 text-blue-800">
+                            <h3 class="font-bold mb-2 flex items-center gap-2 text-lg"><span>🎯</span> 如何獲得 XP 經驗值？</h3>
+                            <ul class="list-disc pl-5 space-y-1 text-sm">
+                                <li>上課大聲回答問題 (Good Answer) <strong class="text-green-600">+1 XP</strong></li>
+                                <li>小組活動互相合作 (Teamwork) <strong class="text-green-600">+1 XP</strong></li>
+                                <li>努力嘗試只說英文 (English Only) <strong class="text-emerald-600">+2 XP</strong></li>
+                                <li>表現超級完美，老師特別加分 (Perfect!) <strong class="text-yellow-600">+3 XP</strong></li>
+                                <li class="text-red-500 font-bold mt-2">注意：發呆、講中文、沒帶課本會被扣除 XP 喔！</li>
+                            </ul>
+                        </div>
+                        
+                        <h3 class="font-bold text-lg text-slate-800 mb-3 border-b-2 border-slate-200 pb-2">🌱 等級階段 (Level Stages)</h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center p-2 px-3 bg-white rounded-lg border border-slate-200">
+                                <span class="font-bold text-slate-600">Lv. 1 新手 (Newbie)</span> <span class="text-sm font-mono text-slate-400">0 ~ 14 XP</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 px-3 bg-white rounded-lg border border-slate-200">
+                                <span class="font-bold text-green-600">Lv. 2 學習者 (Learner)</span> <span class="text-sm font-mono text-slate-400">15 ~ 34 XP</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 px-3 bg-white rounded-lg border border-slate-200">
+                                <span class="font-bold text-blue-600">Lv. 3 探索者 (Explorer)</span> <span class="text-sm font-mono text-slate-400">35 ~ 59 XP</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 px-3 bg-white rounded-lg border border-slate-200">
+                                <span class="font-bold text-purple-600">Lv. 4 專家 (Expert)</span> <span class="text-sm font-mono text-slate-400">60 ~ 99 XP</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 px-3 bg-yellow-50 rounded-lg border border-yellow-300">
+                                <span class="font-bold text-yellow-700 flex items-center gap-1">✨ Lv. 5 大師 (Master)</span> <span class="text-sm font-mono font-bold text-yellow-600">100+ XP</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-lg text-slate-800 mb-4 border-b-2 border-slate-200 pb-2 flex items-center gap-2"><span>🗺️</span> 職業專屬進化軌跡</h3>
+                        
+                        <div class="evolution-grid">
+                            <div class="evo-header">職業 \ 等級</div>
+                            <div class="evo-header">Lv. 1</div>
+                            <div class="evo-header">Lv. 2</div>
+                            <div class="evo-header">Lv. 3</div>
+                            <div class="evo-header">Lv. 4</div>
+                            <div class="evo-header text-yellow-600">Lv. 5 ✨</div>
+
+                            <div class="evo-title text-red-600">Hero<br><span class="text-[10px] text-slate-400 font-normal">戰士</span></div>
+                            <div class="evo-cell text-xl">🗡️</div><div class="evo-cell text-xl">⚔️</div><div class="evo-cell text-xl">🛡️</div><div class="evo-cell text-xl">🐎</div><div class="evo-cell text-2xl drop-shadow-md">🐉</div>
+
+                            <div class="evo-title text-indigo-600">Magician<br><span class="text-[10px] text-slate-400 font-normal">魔法師</span></div>
+                            <div class="evo-cell text-xl">📖</div><div class="evo-cell text-xl">🪄</div><div class="evo-cell text-xl">🔮</div><div class="evo-cell text-xl">🌌</div><div class="evo-cell text-2xl drop-shadow-md">🧙‍♂️</div>
+
+                            <div class="evo-title text-yellow-600">Royal<br><span class="text-[10px] text-slate-400 font-normal">皇族</span></div>
+                            <div class="evo-cell text-xl">📜</div><div class="evo-cell text-xl">🏰</div><div class="evo-cell text-xl">👑</div><div class="evo-cell text-xl">🦅</div><div class="evo-cell text-2xl drop-shadow-md">🦁</div>
+
+                            <div class="evo-title text-green-600">Hunter<br><span class="text-[10px] text-slate-400 font-normal">獵人</span></div>
+                            <div class="evo-cell text-xl">🏹</div><div class="evo-cell text-xl">🦅</div><div class="evo-cell text-xl">🐺</div><div class="evo-cell text-xl">🌿</div><div class="evo-cell text-2xl drop-shadow-md">🎯</div>
+
+                            <div class="evo-title text-orange-600">Beast<br><span class="text-[10px] text-slate-400 font-normal">野獸大師</span></div>
+                            <div class="evo-cell text-xl">🐾</div><div class="evo-cell text-xl">🦴</div><div class="evo-cell text-xl">🐅</div><div class="evo-cell text-xl">🐻</div><div class="evo-cell text-2xl drop-shadow-md">🦖</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= Firebase 與核心邏輯 ================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ====== 您的專屬 Firebase 金鑰 ======
+        const firebaseConfig = {
+            apiKey: "AIzaSyDBLFK7T2ewIk4qgvlBz9hfQuxEALLUezQ",
+            authDomain: "typing-game-755a8.firebaseapp.com",
+            databaseURL: "https://typing-game-755a8-default-rtdb.firebaseio.com",
+            projectId: "typing-game-755a8",
+            storageBucket: "typing-game-755a8.firebasestorage.app",
+            messagingSenderId: "938096537906",
+            appId: "1:938096537906:web:0fb0e431a9fcbb2fcb272b",
+            measurementId: "G-K8NC1SX4X6"
+        };
+        const PUBLIC_ROOM_ID = 'yian-class-rpg-v4'; 
+
+        // ====== 預設 506, 507, 508 學生名單 ======
+        const rawRosters = {
+            "506": [
+                { s:"01", c:"廖芃宇" }, { s:"02", c:"蕭聿辰" }, { s:"03", c:"張誠祐" }, { s:"04", c:"彭秉宥" }, { s:"05", c:"姜天穎" },
+                { s:"06", c:"王以謙" }, { s:"07", c:"玲宸希" }, { s:"08", c:"陳海睿" }, { s:"09", c:"詹濱元" }, { s:"10", c:"羅承恩" },
+                { s:"11", c:"陳宥崴" }, { s:"12", c:"莊沛謙" }, { s:"13", c:"王浤宇" }, { s:"14", c:"陳澔民" }, { s:"15", c:"張名維" },
+                { s:"16", c:"葉書榮" }, { s:"17", c:"張美琰" }, { s:"18", c:"李芷嫻" }, { s:"19", c:"闕米菲" }, { s:"20", c:"蕭品吟" },
+                { s:"21", c:"陳莉雅" }, { s:"22", c:"黃家榆" }, { s:"23", c:"華晨希" }, { s:"24", c:"周瑾緗" }, { s:"25", c:"簡愷螢" },
+                { s:"26", c:"陳宥彤" }, { s:"27", c:"郭語恩" }, { s:"28", c:"楊羽晴" }, { s:"29", c:"楊采翎" }, { s:"30", c:"陳品璇" }
+            ],
+            "507": [
+                { s:"01", c:"姜宥庭" }, { s:"02", c:"蔡承叡" }, { s:"03", c:"蘇之榮" }, { s:"04", c:"林家正" }, { s:"05", c:"楊牧" },
+                { s:"06", c:"李語桐" }, { s:"07", c:"黃宇宸" }, { s:"08", c:"游允樂" }, { s:"09", c:"葉庭宇" }, { s:"10", c:"馬琮越" },
+                { s:"11", c:"陳卓均" }, { s:"12", c:"黃品睿" }, { s:"13", c:"陳奕維" }, { s:"14", c:"許柏誠" }, { s:"15", c:"黃泓邁" },
+                { s:"16", c:"陳奕呈" }, { s:"17", c:"林琬翎" }, { s:"18", c:"林孟璇" }, { s:"19", c:"黃柔瑜" }, { s:"20", c:"吳恩柔" },
+                { s:"21", c:"黃若芸" }, { s:"22", c:"張瑋芯" }, { s:"23", c:"陳芊默" }, { s:"24", c:"王常曦" }, { s:"25", c:"郭采辰" },
+                { s:"26", c:"郭采一" }, { s:"27", c:"黃歆茹" }, { s:"28", c:"徐子晴" }, { s:"29", c:"朱慈慧" }, { s:"30", c:"康珈嘉" }
+            ],
+            "508": [
+                { s:"01", c:"張揚湛" }, { s:"02", c:"許以亮" }, { s:"03", c:"王永昊" }, { s:"04", c:"陳士軒" }, { s:"05", c:"黃照恩" },
+                { s:"06", c:"王竑凱" }, { s:"07", c:"賴思愷" }, { s:"08", c:"蘇澤修" }, { s:"09", c:"林品碩" }, { s:"10", c:"何政雍" },
+                { s:"11", c:"陳彥碩" }, { s:"12", c:"周奕全" }, { s:"13", c:"詹子硯" }, { s:"14", c:"李濬城" }, { s:"15", c:"李濬盛" },
+                { s:"16", c:"吳宇恩" }, { s:"17", c:"張予寧" }, { s:"18", c:"王晨瑀" }, { s:"19", c:"鍾和臻" }, { s:"20", c:"練予璁" },
+                { s:"21", c:"陳品汝" }, { s:"22", c:"連敏芯" }, { s:"23", c:"許允姸" }, { s:"24", c:"許允慈" }, { s:"25", c:"洪娜恩" },
+                { s:"26", c:"鄭妶僖" }, { s:"27", c:"姚湘琳" }, { s:"28", c:"陳俞霏" }, { s:"29", c:"李孟璇" }, { s:"30", c:"薛伊岑" },
+                { s:"31", c:"黃洛歆" }
+            ]
+        };
+
+        // ====== 職業與等級設定 ======
+        const JOBS = {
+            'none': { bg: 'class-bg-none', color: '#64748b', name: '平民', levels: ['👤', '👤', '👤', '👤', '👤'] },
+            'hero': { bg: 'class-bg-hero', color: '#ef4444', name: 'Hero', levels: ['🗡️', '⚔️', '🛡️', '🐎', '🐉'] },
+            'magician': { bg: 'class-bg-magician', color: '#6366f1', name: 'Magician', levels: ['📖', '🪄', '🔮', '🌌', '🧙‍♂️'] },
+            'royal': { bg: 'class-bg-royal', color: '#eab308', name: 'Prince/Princess', levels: ['📜', '🏰', '👑', '🦅', '🦁'] },
+            'hunter': { bg: 'class-bg-hunter', color: '#22c55e', name: 'Hunter', levels: ['🏹', '🦅', '🐺', '🌿', '🎯'] },
+            'beast': { bg: 'class-bg-beast', color: '#f97316', name: 'Beast', levels: ['🐾', '🦴', '🐅', '🐻', '🦖'] }
+        };
+
+        const getLevel = (xp) => {
+            if (xp >= 100) return 5;
+            if (xp >= 60) return 4;
+            if (xp >= 35) return 3;
+            if (xp >= 15) return 2;
+            return 1;
+        };
+
+        const getLevelInfo = (level) => {
+            const info = {
+                1: { title: 'Newbie', ring: 'ring-slate-200' },
+                2: { title: 'Learner', ring: 'ring-green-400' },
+                3: { title: 'Explorer', ring: 'ring-blue-400' },
+                4: { title: 'Expert', ring: 'ring-purple-400' },
+                5: { title: 'Master ✨', ring: 'ring-yellow-400 ring-offset-2 ring-offset-yellow-100 anim-pulse' }
+            };
+            return info[level] || info[1];
+        };
+
+        const getWeekIdentifier = (date = new Date()) => {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return `${d.getUTCFullYear()}-W${weekNo}`;
+        };
+
+        // ====== 系統狀態 ======
+        const state = {
+            view: 'main',
+            dbReady: false,
+            syncMode: 'offline', 
+            currentWeek: getWeekIdentifier(),
+            reportWeek: getWeekIdentifier(),
+            activeClass: '506',
+            students: {}, 
+            selectedIds: new Set(),
+            modalTargetId: null,
+            audioCtx: null
+        };
+
+        let db = null;
+        let unsubscribe = null;
+
+        function buildInitialData() {
+            const built = {};
+            for (let cName in rawRosters) {
+                rawRosters[cName].forEach(s => {
+                    const id = `${cName}-${s.s}`;
+                    built[id] = {
+                        id: id, class: cName, seat: s.s, zh: s.c, en: '', 
+                        job: 'none', xp: 0, todayPts: 0, history: {} 
+                    };
+                });
+            }
+            return built;
+        }
+
+        // ====== 音效與特效 ======
+        function playSound(type) {
+            try {
+                if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+                
+                const ctx = state.audioCtx;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                const now = ctx.currentTime;
+                
+                if (type === 'coin') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1200, now);
+                    osc.frequency.exponentialRampToValueAtTime(2000, now + 0.1);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                } else if (type === 'levelup') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(554, now + 0.1);
+                    osc.frequency.setValueAtTime(659, now + 0.2);
+                    osc.frequency.setValueAtTime(880, now + 0.3);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.6);
+                    osc.start(now); osc.stop(now + 0.6);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                } else if (type === 'select') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                }
+            } catch(e) { console.log('Audio error:', e); }
+        }
+
+        function createFloatingText(x, y, text, color) {
+            const el = document.createElement('div');
+            el.className = 'floating-text';
+            el.innerText = text;
+            el.style.color = color;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        function shootConfetti() {
+            const container = document.getElementById('confetti-container');
+            container.innerHTML = ''; 
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+            for(let i = 0; i < 60; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti-piece ' + (Math.random() > 0.5 ? 'circle' : '');
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                conf.style.animationDelay = (Math.random() * 0.5) + 's';
+                container.appendChild(conf);
+            }
+            setTimeout(() => container.innerHTML = '', 3000);
+        }
+
+        function updateSyncStatus(mode) {
+            state.syncMode = mode;
+            const dot = document.getElementById('sync-dot');
+            const text = document.getElementById('sync-text');
+            if(mode === 'online') {
+                dot.className = 'w-2 h-2 rounded-full bg-green-500 anim-pulse';
+                text.innerText = '雲端同步中';
+                text.className = 'text-green-700 font-bold';
+            } else {
+                dot.className = 'w-2 h-2 rounded-full bg-amber-500';
+                text.innerText = '離線單機模式';
+                text.className = 'text-amber-700 font-bold';
+            }
+        }
+
+        // ====== Firebase 邏輯 ======
+        async function syncData(silent = false) {
+            if (state.syncMode === 'online' && db) {
+                try {
+                    const docRef = doc(db, 'classrooms', PUBLIC_ROOM_ID);
+                    await setDoc(docRef, { students: state.students }, { merge: false });
+                    return true;
+                } catch (e) {
+                    console.error("Sync error:", e);
+                    if(!silent) updateSyncStatus('offline');
+                    return false;
+                }
+            } else {
+                localStorage.setItem('classquest_offline_v4', JSON.stringify(state.students));
+                return true;
+            }
+        }
+
+        async function initFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                db = getFirestore(app);
+
+                await signInAnonymously(auth);
+                updateSyncStatus('online');
+
+                const docRef = doc(db, 'classrooms', PUBLIC_ROOM_ID);
+                unsubscribe = onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists() && docSnap.data().students) {
+                        const cloudData = docSnap.data().students;
+                        const sampleId = Object.keys(cloudData)[0];
+                        if (cloudData[sampleId] && (cloudData[sampleId].class === '506' || cloudData[sampleId].class === '507' || cloudData[sampleId].class === '508')) {
+                            state.students = cloudData;
+                        } else {
+                            state.students = buildInitialData();
+                            syncData(true);
+                        }
+                    } else {
+                        state.students = buildInitialData();
+                        syncData(true);
+                    }
+                    CQ.renderAll();
+                }, (error) => {
+                    console.error("Listen error:", error);
+                    enableOfflineMode();
+                });
+
+            } catch (e) {
+                console.error("Firebase init failed:", e);
+                enableOfflineMode();
+            }
+        }
+
+        function enableOfflineMode() {
+            updateSyncStatus('offline');
+            const saved = localStorage.getItem('classquest_offline_v4');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    const sampleId = Object.keys(parsed)[0];
+                    if (parsed[sampleId] && (parsed[sampleId].class === '506' || parsed[sampleId].class === '507' || parsed[sampleId].class === '508')) {
+                        state.students = parsed;
+                    } else {
+                        state.students = buildInitialData();
+                    }
+                } catch(e) { state.students = buildInitialData(); }
+            } else {
+                state.students = buildInitialData();
+            }
+            CQ.renderAll();
+        }
+
+        // ====== Global CQ 物件 ======
+        window.CQ = {
+            switchView: (viewName) => {
+                state.view = viewName;
+                document.getElementById('view-main').classList.add('hidden');
+                document.getElementById('view-edit').classList.add('hidden');
+                document.getElementById('view-report').classList.add('hidden');
+                document.getElementById('btn-nav-edit').classList.remove('ring-2', 'ring-slate-400');
+                document.getElementById('btn-nav-report').classList.remove('ring-2', 'ring-indigo-400');
+
+                if (viewName === 'main') {
+                    document.getElementById('view-main').classList.remove('hidden');
+                    CQ.renderGrid();
+                } else if (viewName === 'edit') {
+                    document.getElementById('view-edit').classList.remove('hidden');
+                    document.getElementById('btn-nav-edit').classList.add('ring-2', 'ring-slate-400');
+                    CQ.renderEditList();
+                } else if (viewName === 'report') {
+                    document.getElementById('view-report').classList.remove('hidden');
+                    document.getElementById('btn-nav-report').classList.add('ring-2', 'ring-indigo-400');
+                    CQ.renderReport();
+                }
+            },
+
+            changeClass: (cName) => {
+                state.activeClass = cName;
+                state.selectedIds.clear();
+                if(state.view === 'main') CQ.renderGrid();
+                if(state.view === 'edit') CQ.renderEditList();
+                if(state.view === 'report') CQ.renderReport();
+            },
+
+            renderAll: () => {
+                const classes = [...new Set(Object.values(state.students).map(s => s.class))].sort();
+                const selMain = document.getElementById('class-selector');
+                const selEdit = document.getElementById('edit-class-selector');
+                const selReport = document.getElementById('report-class-selector');
+                
+                [selMain, selEdit, selReport].forEach(el => {
+                    if(!el) return;
+                    el.innerHTML = '';
+                    classes.forEach(c => el.innerHTML += `<option value="${c}">${c} 班</option>`);
+                    el.value = state.activeClass;
+                });
+
+                if(state.view === 'main') CQ.renderGrid();
+                if(state.view === 'edit') CQ.renderEditList();
+                if(state.view === 'report') CQ.renderReport();
+                
+                if(state.modalTargetId) CQ.openModal(state.modalTargetId);
+            },
+
+            // --- 視圖 1: 教室網格 ---
+            renderGrid: () => {
+                const grid = document.getElementById('student-grid');
+                grid.innerHTML = '';
+                
+                const classStudents = Object.values(state.students)
+                    .filter(s => s.class === state.activeClass)
+                    .sort((a,b) => parseInt(a.seat) - parseInt(b.seat));
+
+                classStudents.forEach(s => {
+                    const isSelected = state.selectedIds.has(s.id);
+                    const job = JOBS[s.job] || JOBS['none'];
+                    const lvl = getLevel(s.xp);
+                    const lvlInfo = getLevelInfo(lvl);
+                    const icon = job.levels[lvl-1];
+
+                    const displayName = s.en ? s.en : s.zh;
+                    const subName = s.en ? s.zh : '';
+
+                    const card = document.createElement('div');
+                    card.id = `card-${s.id}`;
+                    card.className = `student-card bg-white rounded-2xl p-3 cursor-pointer relative overflow-hidden flex flex-col items-center group ${isSelected ? 'selected' : ''}`;
+                    card.innerHTML = `
+                        <div class="absolute inset-0 opacity-40 ${job.bg}"></div>
+                        <div class="absolute top-2 left-2 bg-white/80 backdrop-blur px-2 py-0.5 rounded-full text-xs font-bold text-slate-500 shadow-sm z-10">${s.seat}</div>
+                        <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center text-3xl shadow-sm border-2 ${isSelected ? 'border-blue-500' : 'border-white'} ring-4 ${lvlInfo.ring} mb-2 z-10 transition-transform group-hover:scale-110">
+                            ${icon}
+                        </div>
+                        <div class="font-bold text-slate-800 text-lg z-10 truncate w-full text-center" title="${displayName}">${displayName}</div>
+                        ${subName ? `<div class="text-xs text-slate-500 z-10 truncate w-full text-center font-bold">${subName}</div>` : ''}
+                        
+                        <div class="mt-2 w-full bg-slate-200 h-2 rounded-full overflow-hidden z-10 shadow-inner">
+                            <div class="h-full bg-blue-500 transition-all duration-500" style="width: ${Math.min((s.xp % 100) / 20 * 100, 100)}%"></div>
+                        </div>
+                        <div class="flex justify-between w-full mt-1 px-1 z-10">
+                            <span class="text-[10px] font-bold text-blue-600">Lv.${lvl}</span>
+                            <span class="text-[10px] font-bold text-slate-400">${s.xp} XP</span>
+                        </div>
+                        ${s.todayPts !== 0 ? `<div class="absolute top-2 right-2 bg-${s.todayPts>0?'green':'red'}-100 text-${s.todayPts>0?'green':'red'}-700 text-xs font-bold px-2 py-0.5 rounded-full shadow-sm z-10">${s.todayPts>0?'+':''}${s.todayPts}</div>` : ''}
+                    `;
+
+                    // 【核心修復】點擊與多選邏輯
+                    let timer;
+                    const onDown = () => {
+                        timer = setTimeout(() => {
+                            playSound('select');
+                            CQ.toggleSelect(s.id);
+                        }, 500); // 500ms 長按觸發多選
+                    };
+                    const onUp = () => clearTimeout(timer);
+                    
+                    // 綁定事件
+                    card.addEventListener('mousedown', (e) => { if(e.button !== 2) onDown(); });
+                    card.addEventListener('mouseup', onUp);
+                    card.addEventListener('mouseleave', onUp);
+                    card.addEventListener('touchstart', onDown, {passive:true});
+                    card.addEventListener('touchend', onUp);
+
+                    // 點擊事件判斷
+                    card.addEventListener('click', () => {
+                        if(state.selectedIds.size > 0) {
+                            // 如果目前有選取任何東西，點擊即為加入/取消選取
+                            CQ.toggleSelect(s.id);
+                        } else {
+                            // 否則開啟個人面板
+                            CQ.openModal(s.id);
+                        }
+                    });
+                    
+                    // 右鍵多選
+                    card.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        CQ.toggleSelect(s.id);
+                    });
+
+                    grid.appendChild(card);
+                });
+            },
+
+            toggleSelect: (id) => {
+                if(state.selectedIds.has(id)) state.selectedIds.delete(id);
+                else state.selectedIds.add(id);
+                CQ.renderGrid();
+            },
+            clearSelection: () => {
+                state.selectedIds.clear();
+                CQ.renderGrid();
+            },
+
+            // --- 學生操作面板 ---
+            openModal: (id) => {
+                state.modalTargetId = id;
+                const s = state.students[id];
+                if(!s) return;
+
+                const modal = document.getElementById('student-modal');
+                const job = JOBS[s.job] || JOBS['none'];
+                const lvl = getLevel(s.xp);
+                const lvlInfo = getLevelInfo(lvl);
+                const icon = job.levels[lvl-1];
+
+                document.getElementById('modal-header').className = `p-6 relative text-center ${job.bg}`;
+                document.getElementById('modal-avatar').innerHTML = icon;
+                
+                const enEl = document.getElementById('modal-en-name');
+                const inEl = document.getElementById('modal-en-input');
+                enEl.innerHTML = s.en ? s.en : "✏️ <span class='text-lg'>Add English Name</span>";
+                inEl.value = s.en;
+                enEl.classList.remove('hidden');
+                inEl.classList.add('hidden');
+
+                document.getElementById('modal-zh-name').innerText = s.zh;
+                document.getElementById('modal-seat-info').innerText = `Seat ${s.seat}`;
+                document.getElementById('modal-class-info').innerText = `${job.name}`;
+                document.getElementById('modal-xp-info').innerText = `Lv.${lvl} ${lvlInfo.title} (${s.xp} XP)`;
+
+                if(s.job === 'none') {
+                    document.getElementById('section-choose-class').classList.remove('hidden');
+                    document.getElementById('section-give-points').classList.add('hidden');
+                } else {
+                    document.getElementById('section-choose-class').classList.add('hidden');
+                    document.getElementById('section-give-points').classList.remove('hidden');
+                }
+
+                modal.classList.remove('hidden');
+            },
+            closeModal: () => {
+                state.modalTargetId = null;
+                document.getElementById('student-modal').classList.add('hidden');
+            },
+            
+            // 多選加分面板
+            awardSelectedModal: () => {
+                if(state.selectedIds.size === 0) return alert("請先在畫面上長按或點選學生卡片！");
+                document.getElementById('multi-award-count').innerText = state.selectedIds.size;
+                document.getElementById('multi-award-modal').classList.remove('hidden');
+            },
+            closeMultiAwardModal: () => {
+                document.getElementById('multi-award-modal').classList.add('hidden');
+            },
+
+            editEnNameInModal: () => {
+                document.getElementById('modal-en-name').classList.add('hidden');
+                const input = document.getElementById('modal-en-input');
+                input.classList.remove('hidden');
+                input.focus(); input.select();
+            },
+            saveEnNameFromModal: () => {
+                if(!state.modalTargetId) return;
+                const newName = document.getElementById('modal-en-input').value.trim();
+                document.getElementById('modal-en-input').classList.add('hidden');
+                document.getElementById('modal-en-name').classList.remove('hidden');
+                
+                if(newName !== state.students[state.modalTargetId].en) {
+                    state.students[state.modalTargetId].en = newName;
+                    syncData();
+                }
+            },
+
+            setJob: (jobId) => {
+                if(!state.modalTargetId) return;
+                state.students[state.modalTargetId].job = jobId;
+                playSound('levelup');
+                shootConfetti();
+                syncData();
+                CQ.openModal(state.modalTargetId); 
+            },
+            resetJob: () => {
+                if(!state.modalTargetId) return;
+                if(confirm("確定要重置職業嗎？")) {
+                    state.students[state.modalTargetId].job = 'none';
+                    syncData();
+                    CQ.openModal(state.modalTargetId);
+                }
+            },
+
+            awardPoint: (pts, reason) => {
+                playSound('coin');
+                
+                if(state.selectedIds.size > 0) {
+                    // 多選加分模式
+                    state.selectedIds.forEach(id => processPoint(id, pts));
+                    CQ.clearSelection();
+                    CQ.closeMultiAwardModal();
+                } else if (state.modalTargetId) {
+                    // 單人加分模式
+                    processPoint(state.modalTargetId, pts);
+                    CQ.closeModal();
+                }
+                
+                syncData();
+            },
+            deductPoint: (pts, reason) => {
+                playSound('error');
+                document.body.classList.add('shake-screen');
+                setTimeout(()=>document.body.classList.remove('shake-screen'), 500);
+
+                if(state.selectedIds.size > 0) {
+                    state.selectedIds.forEach(id => processPoint(id, pts));
+                    CQ.clearSelection();
+                    CQ.closeMultiAwardModal();
+                } else if (state.modalTargetId) {
+                    processPoint(state.modalTargetId, pts);
+                    CQ.closeModal();
+                }
+                syncData();
+            },
+
+            // --- 視圖 2: 編輯名單後台 ---
+            renderEditList: () => {
+                const tbody = document.getElementById('edit-table-body');
+                tbody.innerHTML = '';
+                
+                const classStudents = Object.values(state.students)
+                    .filter(s => s.class === state.activeClass)
+                    .sort((a,b) => parseInt(a.seat) - parseInt(b.seat));
+
+                classStudents.forEach(s => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors';
+                    row.innerHTML = `
+                        <td class="p-3 font-bold text-slate-500">${s.seat}</td>
+                        <td class="p-3 font-bold text-slate-800">${s.zh}</td>
+                        <td class="p-3">
+                            <input type="text" value="${s.en}" onblur="CQ.updateEnName('${s.id}', this.value)" class="border-2 border-slate-200 rounded px-2 py-1 outline-none focus:border-blue-500 w-32" placeholder="無">
+                        </td>
+                        <td class="p-3 text-sm text-slate-600">${JOBS[s.job]?.name || '平民'}</td>
+                        <td class="p-3 font-bold text-slate-700">${s.xp} / <span class="${s.todayPts>=0?'text-green-500':'text-red-500'}">${s.todayPts>0?'+':''}${s.todayPts}</span></td>
+                        <td class="p-3 text-center">
+                            <button onclick="CQ.removeStudent('${s.id}')" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">刪除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            },
+            updateEnName: (id, newName) => {
+                if(state.students[id] && state.students[id].en !== newName.trim()) {
+                    state.students[id].en = newName.trim();
+                    syncData();
+                }
+            },
+            addStudent: () => {
+                const seat = document.getElementById('new-seat').value.padStart(2, '0');
+                const zh = document.getElementById('new-name').value.trim();
+                const en = document.getElementById('new-en').value.trim();
+                if(!seat || !zh || seat === '00') return alert("請輸入座號與中文名");
+                
+                const id = `${state.activeClass}-${seat}`;
+                if(state.students[id]) return alert("此座號已存在！");
+
+                state.students[id] = {
+                    id, class: state.activeClass, seat, zh, en,
+                    job: 'none', xp: 0, todayPts: 0, history: {}
+                };
+                
+                document.getElementById('new-seat').value = '';
+                document.getElementById('new-name').value = '';
+                document.getElementById('new-en').value = '';
+                
+                syncData();
+                CQ.renderEditList();
+            },
+            removeStudent: (id) => {
+                if(confirm("確定刪除此學生？相關分數紀錄將永久遺失！")) {
+                    delete state.students[id];
+                    syncData();
+                    CQ.renderEditList();
+                }
+            },
+
+            // --- 視圖 3: 歷史報表 ---
+            renderReport: () => {
+                const weekSel = document.getElementById('report-week-selector');
+                const targetWeek = weekSel.value || state.currentWeek;
+                
+                const allWeeks = new Set([state.currentWeek]);
+                Object.values(state.students).forEach(s => {
+                    Object.keys(s.history || {}).forEach(w => allWeeks.add(w));
+                });
+                
+                weekSel.innerHTML = '';
+                Array.from(allWeeks).sort().reverse().forEach(w => {
+                    weekSel.innerHTML += `<option value="${w}">${w.replace('-W', ' 年第 ')} 週 ${w===state.currentWeek?'(本週)':''}</option>`;
+                });
+                weekSel.value = targetWeek;
+
+                const tbody = document.getElementById('report-table-body');
+                tbody.innerHTML = '';
+                
+                const classStudents = Object.values(state.students)
+                    .filter(s => s.class === state.activeClass)
+                    .sort((a,b) => parseInt(a.seat) - parseInt(b.seat));
+
+                classStudents.forEach(s => {
+                    const wHist = (s.history || {})[targetWeek] || { pos: 0, neg: 0 };
+                    const totalWeek = wHist.pos + wHist.neg;
+                    const finalScore = Math.min(100, Math.max(0, 75 + Math.floor(s.xp * 0.5) + totalWeek));
+
+                    const lvl = getLevel(s.xp);
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors';
+                    row.innerHTML = `
+                        <td class="p-3 font-bold text-slate-500">${s.seat}</td>
+                        <td class="p-3 font-bold text-slate-800">${s.zh} ${s.en ? `<span class="text-sm text-slate-400 font-normal">(${s.en})</span>`:''}</td>
+                        <td class="p-3 text-sm text-slate-600">${JOBS[s.job]?.name||'平民'} Lv.${lvl}</td>
+                        <td class="p-3 font-bold text-green-600">+${wHist.pos}</td>
+                        <td class="p-3 font-bold text-red-500">${wHist.neg}</td>
+                        <td class="p-3 font-bold text-indigo-700 text-lg">${totalWeek > 0 ? '+'+totalWeek : totalWeek}</td>
+                        <td class="p-3 font-bold text-amber-700 bg-amber-50 text-center">${finalScore}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            },
+
+            exportCSV: () => {
+                const targetWeek = document.getElementById('report-week-selector').value;
+                let csv = "座號,中文名,英文名,職業,等級,總XP,本週加分,本週扣分,本週總結算,平時成績預估\n";
+                
+                Object.values(state.students)
+                    .filter(s => s.class === state.activeClass)
+                    .sort((a,b) => parseInt(a.seat) - parseInt(b.seat))
+                    .forEach(s => {
+                        const wHist = (s.history || {})[targetWeek] || { pos: 0, neg: 0 };
+                        const totalWeek = wHist.pos + wHist.neg;
+                        const finalScore = Math.min(100, Math.max(0, 75 + Math.floor(s.xp * 0.5) + totalWeek));
+                        csv += `="${s.seat}",${s.zh},${s.en},${JOBS[s.job]?.name||'平民'},Lv.${getLevel(s.xp)},${s.xp},${wHist.pos},${wHist.neg},${totalWeek},${finalScore}\n`;
+                    });
+
+                const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `${state.activeClass}班_${targetWeek}_平時成績表.csv`;
+                link.click();
+            },
+
+            showRules: () => document.getElementById('rules-modal').classList.remove('hidden'),
+            closeRules: () => document.getElementById('rules-modal').classList.add('hidden')
+        };
+
+        // 處理加扣分核心邏輯 (計算升級與歷史紀錄)
+        function processPoint(id, pts) {
+            const s = state.students[id];
+            const oldLvl = getLevel(s.xp);
+            
+            s.xp = Math.max(0, s.xp + pts);
+            s.todayPts += pts;
+
+            if(!s.history) s.history = {};
+            if(!s.history[state.currentWeek]) s.history[state.currentWeek] = { pos: 0, neg: 0 };
+            if(pts > 0) s.history[state.currentWeek].pos += pts;
+            else s.history[state.currentWeek].neg += pts;
+
+            // 飄字動畫 (修復定位問題)
+            const el = document.getElementById(`card-${id}`);
+            if (el) {
+                // 確保滾動時座標也是正確的
+                const rect = el.getBoundingClientRect();
+                createFloatingText(
+                    rect.left + rect.width/2 - 10, 
+                    rect.top + window.scrollY + 10, 
+                    pts > 0 ? `+${pts}` : pts, 
+                    pts > 0 ? '#10b981' : '#ef4444'
+                );
+            }
+
+            // 升級判定
+            if (getLevel(s.xp) > oldLvl) {
+                setTimeout(() => {
+                    playSound('levelup');
+                    shootConfetti();
+                    alert(`🎉 恭喜！${s.zh} 升級到 Level ${getLevel(s.xp)} 了！`);
+                }, 800);
+            }
+        }
+
+        // ====== 啟動程式 ======
+        initFirebase();
+        
+        // 每日重置 TodayPts
+        const lastLogin = localStorage.getItem('cq_last_date_v4');
+        const todayStr = new Date().toDateString();
+        if(lastLogin !== todayStr) {
+            for(let id in state.students) state.students[id].todayPts = 0;
+            localStorage.setItem('cq_last_date_v4', todayStr);
+            syncData(true);
+        }
+
+    </script>
+</body>
+</html>
