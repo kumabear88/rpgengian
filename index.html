@@ -33,11 +33,11 @@
 
         .anim-pulse { animation: pulse-ring 2s infinite; }
         .anim-bounce { animation: bounce-sm 1s ease-in-out infinite; }
-        .floating-text { position: absolute; font-weight: bold; font-size: 2rem; pointer-events: none; animation: float-up 1s ease-out forwards; z-index: 100; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .floating-text { position: absolute; font-weight: bold; font-size: 2.5rem; pointer-events: none; animation: float-up 1s ease-out forwards; z-index: 100; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .shake-screen { animation: screen-shake 0.5s; }
 
         /* 卡片與職業樣式 */
-        .student-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 3px solid transparent; }
+        .student-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 4px solid transparent; }
         .student-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #93c5fd; }
         .student-card.selected { border-color: #3b82f6; transform: scale(1.05); box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.3); z-index: 10; }
         
@@ -147,7 +147,7 @@
                 </div>
 
                 <div class="flex items-center gap-3 mb-6">
-                    <select id="edit-class-selector" onchange="CQ.renderEditList()" class="bg-slate-50 border-2 border-slate-200 text-slate-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
+                    <select id="edit-class-selector" onchange="CQ.changeClass(this.value)" class="bg-slate-50 border-2 border-slate-200 text-slate-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
                 </div>
 
                 <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6 flex flex-wrap gap-3 items-end">
@@ -204,7 +204,8 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-indigo-600 mb-1">🏫 班級</label>
-                        <select id="report-class-selector" onchange="CQ.renderReport()" class="bg-white border-2 border-indigo-200 text-indigo-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
+                        <!-- 修復報表切換班級的 Bug：將 onchange 綁定為 changeClass -->
+                        <select id="report-class-selector" onchange="CQ.changeClass(this.value)" class="bg-white border-2 border-indigo-200 text-indigo-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
                     </div>
                     <div class="ml-auto flex items-center">
                         <div class="text-sm text-slate-500 bg-white px-3 py-2 rounded-lg border border-slate-200">
@@ -233,7 +234,7 @@
         </main>
     </div>
 
-    <!-- 彈出視窗：學生操作面板 (單人面板 / 包含選職業) -->
+    <!-- 彈出視窗：單人操作面板 (選職業與加分) -->
     <div id="student-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden modal-content shadow-2xl border-4 border-white flex flex-col max-h-[90vh]">
             
@@ -258,7 +259,6 @@
 
             <div class="p-6 overflow-y-auto bg-slate-50 flex-1">
                 
-                <!-- 選擇職業區 (未轉職顯示) -->
                 <div id="section-choose-class" class="hidden">
                     <div class="text-center mb-4">
                         <span class="text-sm font-bold text-indigo-600 bg-indigo-100 px-4 py-1 rounded-full tracking-wider">選擇英語單詞職業 (CHOOSE YOUR JOB)</span>
@@ -282,7 +282,6 @@
                     </div>
                 </div>
 
-                <!-- 單人加扣分區 (已轉職顯示) -->
                 <div id="section-give-points" class="hidden space-y-6">
                     <div>
                         <div class="flex items-center gap-2 mb-3 px-2">
@@ -342,7 +341,7 @@
         </div>
     </div>
 
-    <!-- 彈出視窗：多選加分專用面板 -->
+    <!-- 全新：多選加分專用面板 -->
     <div id="multi-award-modal" class="fixed inset-0 modal-overlay hidden z-[60] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden modal-content shadow-2xl border-4 border-white flex flex-col">
             <div class="p-6 bg-blue-600 text-white text-center relative">
@@ -434,7 +433,7 @@
                             <div class="evo-title text-indigo-600">Magician<br><span class="text-[10px] text-slate-400 font-normal">魔法師</span></div>
                             <div class="evo-cell text-xl">📖</div><div class="evo-cell text-xl">🪄</div><div class="evo-cell text-xl">🔮</div><div class="evo-cell text-xl">🌌</div><div class="evo-cell text-2xl drop-shadow-md">🧙‍♂️</div>
 
-                            <div class="evo-title text-yellow-600">Royal<br><span class="text-[10px] text-slate-400 font-normal">皇族</span></div>
+                            <div class="evo-title text-yellow-600">Royal<br><span class="text-[10px] text-slate-400 font-normal">王子/公主</span></div>
                             <div class="evo-cell text-xl">📜</div><div class="evo-cell text-xl">🏰</div><div class="evo-cell text-xl">👑</div><div class="evo-cell text-xl">🦅</div><div class="evo-cell text-2xl drop-shadow-md">🦁</div>
 
                             <div class="evo-title text-green-600">Hunter<br><span class="text-[10px] text-slate-400 font-normal">獵人</span></div>
@@ -514,6 +513,14 @@
             if (xp >= 35) return 3;
             if (xp >= 15) return 2;
             return 1;
+        };
+
+        const getNextLevelXP = (xp) => {
+            if (xp < 15) return 15;
+            if (xp < 35) return 35;
+            if (xp < 60) return 60;
+            if (xp < 100) return 100;
+            return 'MAX';
         };
 
         const getLevelInfo = (level) => {
@@ -797,58 +804,61 @@
 
                     const displayName = s.en ? s.en : s.zh;
                     const subName = s.en ? s.zh : '';
+                    
+                    const nextXP = getNextLevelXP(s.xp);
+                    const percent = s.xp >= 100 ? 100 : (() => {
+                        let base = s.xp < 15 ? 0 : (s.xp < 35 ? 15 : (s.xp < 60 ? 35 : 60));
+                        let target = s.xp < 15 ? 15 : (s.xp < 35 ? 35 : (s.xp < 60 ? 60 : 100));
+                        return ((s.xp - base) / (target - base)) * 100;
+                    })();
 
                     const card = document.createElement('div');
                     card.id = `card-${s.id}`;
                     card.className = `student-card bg-white rounded-2xl p-3 cursor-pointer relative overflow-hidden flex flex-col items-center group ${isSelected ? 'selected' : ''}`;
                     card.innerHTML = `
                         <div class="absolute inset-0 opacity-40 ${job.bg}"></div>
-                        <div class="absolute top-2 left-2 bg-white/80 backdrop-blur px-2 py-0.5 rounded-full text-xs font-bold text-slate-500 shadow-sm z-10">${s.seat}</div>
-                        <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center text-3xl shadow-sm border-2 ${isSelected ? 'border-blue-500' : 'border-white'} ring-4 ${lvlInfo.ring} mb-2 z-10 transition-transform group-hover:scale-110">
+                        <div class="absolute top-2 left-2 bg-white/90 backdrop-blur px-2 py-0.5 rounded-full text-sm font-bold text-slate-600 shadow-sm z-10">${s.seat}</div>
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-4xl shadow-sm border-2 ${isSelected ? 'border-blue-500' : 'border-white'} ring-4 ${lvlInfo.ring} mb-2 z-10 transition-transform group-hover:scale-110">
                             ${icon}
                         </div>
-                        <div class="font-bold text-slate-800 text-lg z-10 truncate w-full text-center" title="${displayName}">${displayName}</div>
-                        ${subName ? `<div class="text-xs text-slate-500 z-10 truncate w-full text-center font-bold">${subName}</div>` : ''}
+                        <div class="font-bold text-slate-800 text-xl z-10 truncate w-full text-center" title="${displayName}">${displayName}</div>
+                        ${subName ? `<div class="text-sm text-slate-500 z-10 truncate w-full text-center font-bold">${subName}</div>` : ''}
                         
-                        <div class="mt-2 w-full bg-slate-200 h-2 rounded-full overflow-hidden z-10 shadow-inner">
-                            <div class="h-full bg-blue-500 transition-all duration-500" style="width: ${Math.min((s.xp % 100) / 20 * 100, 100)}%"></div>
+                        <div class="mt-2 w-full bg-slate-200 h-3 rounded-full overflow-hidden z-10 shadow-inner">
+                            <div class="h-full bg-blue-500 transition-all duration-500" style="width: ${percent}%"></div>
                         </div>
-                        <div class="flex justify-between w-full mt-1 px-1 z-10">
-                            <span class="text-[10px] font-bold text-blue-600">Lv.${lvl}</span>
-                            <span class="text-[10px] font-bold text-slate-400">${s.xp} XP</span>
+                        <div class="flex justify-between w-full mt-1 px-1 z-10 items-center">
+                            <span class="text-xs font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">Lv.${lvl}</span>
+                            <span class="text-xs font-bold text-slate-500 tracking-wide">${s.xp} / ${nextXP}</span>
                         </div>
-                        ${s.todayPts !== 0 ? `<div class="absolute top-2 right-2 bg-${s.todayPts>0?'green':'red'}-100 text-${s.todayPts>0?'green':'red'}-700 text-xs font-bold px-2 py-0.5 rounded-full shadow-sm z-10">${s.todayPts>0?'+':''}${s.todayPts}</div>` : ''}
+                        ${s.todayPts !== 0 ? `<div class="absolute top-2 right-2 bg-${s.todayPts>0?'green':'red'}-100 text-${s.todayPts>0?'green':'red'}-700 text-sm font-bold px-2 py-0.5 rounded-full shadow-sm z-10">${s.todayPts>0?'+':''}${s.todayPts}</div>` : ''}
                     `;
 
-                    // 【核心修復】點擊與多選邏輯
+                    // 點擊與多選邏輯
                     let timer;
                     const onDown = () => {
                         timer = setTimeout(() => {
                             playSound('select');
                             CQ.toggleSelect(s.id);
-                        }, 500); // 500ms 長按觸發多選
+                        }, 500); 
                     };
                     const onUp = () => clearTimeout(timer);
                     
-                    // 綁定事件
                     card.addEventListener('mousedown', (e) => { if(e.button !== 2) onDown(); });
                     card.addEventListener('mouseup', onUp);
                     card.addEventListener('mouseleave', onUp);
                     card.addEventListener('touchstart', onDown, {passive:true});
                     card.addEventListener('touchend', onUp);
 
-                    // 點擊事件判斷
                     card.addEventListener('click', () => {
                         if(state.selectedIds.size > 0) {
-                            // 如果目前有選取任何東西，點擊即為加入/取消選取
+                            // 已經在多選模式下，單擊直接加入/取消選取
                             CQ.toggleSelect(s.id);
                         } else {
-                            // 否則開啟個人面板
                             CQ.openModal(s.id);
                         }
                     });
                     
-                    // 右鍵多選
                     card.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
                         CQ.toggleSelect(s.id);
@@ -959,12 +969,10 @@
                 playSound('coin');
                 
                 if(state.selectedIds.size > 0) {
-                    // 多選加分模式
                     state.selectedIds.forEach(id => processPoint(id, pts));
                     CQ.clearSelection();
                     CQ.closeMultiAwardModal();
                 } else if (state.modalTargetId) {
-                    // 單人加分模式
                     processPoint(state.modalTargetId, pts);
                     CQ.closeModal();
                 }
@@ -1131,13 +1139,12 @@
             if(pts > 0) s.history[state.currentWeek].pos += pts;
             else s.history[state.currentWeek].neg += pts;
 
-            // 飄字動畫 (修復定位問題)
+            // 飄字動畫 (修復定位問題，加入 scrollY 確保捲動時不偏移)
             const el = document.getElementById(`card-${id}`);
             if (el) {
-                // 確保滾動時座標也是正確的
                 const rect = el.getBoundingClientRect();
                 createFloatingText(
-                    rect.left + rect.width/2 - 10, 
+                    rect.left + rect.width/2 - 10 + window.scrollX, 
                     rect.top + window.scrollY + 10, 
                     pts > 0 ? `+${pts}` : pts, 
                     pts > 0 ? '#10b981' : '#ef4444'
