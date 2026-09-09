@@ -7,7 +7,6 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 基礎設定與動畫 */
         body { font-family: 'Comic Sans MS', 'Microsoft JhengHei', sans-serif; background-color: #f8fafc; overflow-x: hidden; }
         
         @keyframes pulse-ring {
@@ -33,11 +32,10 @@
 
         .anim-pulse { animation: pulse-ring 2s infinite; }
         .anim-bounce { animation: bounce-sm 1s ease-in-out infinite; }
-        .floating-text { position: absolute; font-weight: bold; font-size: 2.5rem; pointer-events: none; animation: float-up 1s ease-out forwards; z-index: 100; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .floating-text { position: absolute; font-weight: bold; font-size: 2rem; pointer-events: none; animation: float-up 1s ease-out forwards; z-index: 100; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .shake-screen { animation: screen-shake 0.5s; }
 
-        /* 卡片與職業樣式 */
-        .student-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 4px solid transparent; }
+        .student-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 3px solid transparent; }
         .student-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #93c5fd; }
         .student-card.selected { border-color: #3b82f6; transform: scale(1.05); box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.3); z-index: 10; }
         
@@ -48,27 +46,26 @@
         .class-bg-beast { background: linear-gradient(135deg, #fed7aa 0%, #ffedd5 100%); }
         .class-bg-none { background: #f1f5f9; }
 
-        /* 模態視窗 */
         .modal-overlay { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
         .modal-content { animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes slideUp { from { transform: translateY(50px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
 
-        /* 彩帶特效 */
         #confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
         .confetti-piece { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: fall linear forwards; }
         .confetti-piece.circle { border-radius: 50%; }
         @keyframes fall { 0% { transform: translateY(-20px) rotate(0deg) rotateX(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg) rotateX(360deg); opacity: 0; } }
 
-        /* 輸入框樣式 */
         .editable-name { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2px; cursor: pointer; transition: 0.2s; }
         .editable-name:hover { border-color: #3b82f6; color: #1e40af; background: #eff6ff; border-radius: 4px; padding: 0 4px; }
         .name-input { background: #fff; border: 2px solid #3b82f6; border-radius: 6px; padding: 2px 8px; font-size: inherit; font-weight: inherit; outline: none; width: 150px; text-align: center; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1); }
 
-        /* 職業進化軌跡網格 */
         .evolution-grid { display: grid; grid-template-columns: 80px repeat(5, 1fr); gap: 8px; align-items: center; text-align: center; }
         .evo-cell { padding: 8px 4px; background: #fff; border-radius: 8px; border: 1px solid #e2e8f0; }
         .evo-header { font-size: 0.75rem; font-weight: bold; color: #64748b; background: #f8fafc; border: none; }
         .evo-title { font-weight: bold; font-size: 0.85rem; color: #334155; text-align: right; padding-right: 8px; }
+        
+        /* Custom Group Button Style */
+        .group-btn.active { background-color: #9333ea; color: white; border-color: #7e22ce; transform: scale(1.05); }
     </style>
 </head>
 <body>
@@ -76,7 +73,6 @@
 
     <!-- UI Root -->
     <div id="app-root" class="min-h-screen pb-24">
-        <!-- 頂部導航 -->
         <nav class="bg-white shadow-sm sticky top-0 z-40 border-b-4 border-blue-500">
             <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -87,7 +83,6 @@
                     </div>
                 </div>
                 <div class="flex gap-2 items-center">
-                    <!-- 連線狀態指示燈 -->
                     <div id="sync-status" class="hidden sm:flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-full text-xs font-bold text-slate-500 border border-slate-200">
                         <span class="w-2 h-2 rounded-full bg-slate-400" id="sync-dot"></span>
                         <span id="sync-text">Loading...</span>
@@ -106,12 +101,9 @@
             </div>
         </nav>
 
-        <!-- 主視圖：班級與學生列表 -->
         <main id="view-main" class="max-w-7xl mx-auto px-4 py-6">
-            <!-- 班級選擇與工具列 -->
             <div class="flex flex-wrap gap-4 justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 relative">
                 
-                <!-- 第一週提示掛飾 -->
                 <div class="absolute -bottom-3 -right-3 bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-lg border-2 border-white transform rotate-[-5deg] z-20">
                     <div class="flex items-center gap-1"><span>📌</span> 115學年度 第1學期</div>
                     <div class="text-[10px] opacity-90 mt-0.5">Week 1 (9/3 軍人節無放假)</div>
@@ -122,7 +114,10 @@
                     <select id="class-selector" onchange="CQ.changeClass(this.value)" class="bg-blue-50 border-2 border-blue-200 text-blue-800 font-bold text-lg rounded-xl px-4 py-2 outline-none focus:border-blue-500 cursor-pointer shadow-sm">
                     </select>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="CQ.openGroupAwardModal()" class="px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-xl shadow-sm transition-transform active:scale-95 flex items-center gap-2 text-lg">
+                        <span class="text-xl">🏆</span> 小組加分
+                    </button>
                     <button onclick="CQ.awardSelectedModal()" class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-sm transition-transform active:scale-95 flex items-center gap-2 text-lg">
                         <span class="text-xl">🌟</span> 多選加分
                     </button>
@@ -132,22 +127,21 @@
                 </div>
             </div>
 
-            <!-- 學生網格 -->
+            <!-- Student Grid -->
             <div id="student-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 relative">
-                <!-- 學生卡片由 JS 產生 -->
+                <!-- Generated by JS -->
             </div>
         </main>
 
-        <!-- 視圖：編輯名單後台 -->
         <main id="view-edit" class="hidden max-w-5xl mx-auto px-4 py-6">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2"><span>✏️</span> 名單管理與英文名設定</h2>
+                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2"><span>✏️</span> 名單管理與分組設定</h2>
                     <button onclick="CQ.switchView('main')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold text-slate-700">🔙 返回教室</button>
                 </div>
 
                 <div class="flex items-center gap-3 mb-6">
-                    <select id="edit-class-selector" onchange="CQ.changeClass(this.value)" class="bg-slate-50 border-2 border-slate-200 text-slate-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
+                    <select id="edit-class-selector" onchange="CQ.renderEditList()" class="bg-slate-50 border-2 border-slate-200 text-slate-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
                 </div>
 
                 <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6 flex flex-wrap gap-3 items-end">
@@ -157,11 +151,21 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-blue-600 mb-1">中文名 Name</label>
-                        <input type="text" id="new-name" class="w-32 px-3 py-2 rounded-lg border border-slate-300 outline-none focus:border-blue-500" placeholder="王小明">
+                        <input type="text" id="new-name" class="w-28 px-3 py-2 rounded-lg border border-slate-300 outline-none focus:border-blue-500" placeholder="王小明">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-blue-600 mb-1">英文名 English (選填)</label>
-                        <input type="text" id="new-en" class="w-32 px-3 py-2 rounded-lg border border-slate-300 outline-none focus:border-blue-500" placeholder="Kevin">
+                        <label class="block text-xs font-bold text-blue-600 mb-1">英文名 (選填)</label>
+                        <input type="text" id="new-en" class="w-28 px-3 py-2 rounded-lg border border-slate-300 outline-none focus:border-blue-500" placeholder="Kevin">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-blue-600 mb-1">組別</label>
+                        <select id="new-group" class="w-24 px-3 py-2 rounded-lg border border-slate-300 outline-none focus:border-blue-500">
+                            <option value="0">無</option>
+                            <option value="1">第 1 組</option><option value="2">第 2 組</option>
+                            <option value="3">第 3 組</option><option value="4">第 4 組</option>
+                            <option value="5">第 5 組</option><option value="6">第 6 組</option>
+                            <option value="7">第 7 組</option><option value="8">第 8 組</option>
+                        </select>
                     </div>
                     <button onclick="CQ.addStudent()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm">➕ 新增</button>
                 </div>
@@ -172,7 +176,8 @@
                             <tr class="bg-slate-100 text-slate-600 text-sm">
                                 <th class="p-3 border-b-2">座號</th>
                                 <th class="p-3 border-b-2">中文名</th>
-                                <th class="p-3 border-b-2">英文名 (點擊可修改)</th>
+                                <th class="p-3 border-b-2">英文名 (點擊修改)</th>
+                                <th class="p-3 border-b-2 text-center text-purple-600">小組 (Group)</th>
                                 <th class="p-3 border-b-2">職業</th>
                                 <th class="p-3 border-b-2">XP / 今日加分</th>
                                 <th class="p-3 border-b-2 text-center">操作</th>
@@ -184,7 +189,6 @@
             </div>
         </main>
 
-        <!-- 視圖：歷史報表後台 -->
         <main id="view-report" class="hidden max-w-5xl mx-auto px-4 py-6">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
                 <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
@@ -204,8 +208,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-indigo-600 mb-1">🏫 班級</label>
-                        <!-- 修復報表切換班級的 Bug：將 onchange 綁定為 changeClass -->
-                        <select id="report-class-selector" onchange="CQ.changeClass(this.value)" class="bg-white border-2 border-indigo-200 text-indigo-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
+                        <select id="report-class-selector" onchange="CQ.renderReport()" class="bg-white border-2 border-indigo-200 text-indigo-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
                     </div>
                     <div class="ml-auto flex items-center">
                         <div class="text-sm text-slate-500 bg-white px-3 py-2 rounded-lg border border-slate-200">
@@ -234,7 +237,6 @@
         </main>
     </div>
 
-    <!-- 彈出視窗：單人操作面板 (選職業與加分) -->
     <div id="student-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden modal-content shadow-2xl border-4 border-white flex flex-col max-h-[90vh]">
             
@@ -250,8 +252,9 @@
                     <span id="modal-zh-name" class="text-xl text-slate-500 font-normal"></span>
                 </h2>
                 
-                <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white/60 backdrop-blur rounded-full text-slate-700 font-bold text-sm shadow-sm">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white/60 backdrop-blur rounded-full text-slate-700 font-bold text-sm shadow-sm mt-1">
                     <span id="modal-seat-info">Seat --</span> | 
+                    <span id="modal-group-info" class="text-purple-700 font-bold"></span> |
                     <span id="modal-class-info" class="text-blue-700"></span> 
                     <span id="modal-xp-info" class="text-amber-600 ml-1"></span>
                 </div>
@@ -341,7 +344,6 @@
         </div>
     </div>
 
-    <!-- 全新：多選加分專用面板 -->
     <div id="multi-award-modal" class="fixed inset-0 modal-overlay hidden z-[60] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden modal-content shadow-2xl border-4 border-white flex flex-col">
             <div class="p-6 bg-blue-600 text-white text-center relative">
@@ -373,7 +375,52 @@
         </div>
     </div>
 
-    <!-- 彈出視窗：遊戲規則/等級說明 -->
+    <div id="group-award-modal" class="fixed inset-0 modal-overlay hidden z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden modal-content shadow-2xl border-4 border-white flex flex-col">
+            <div class="p-6 bg-purple-600 text-white text-center relative">
+                <button onclick="CQ.closeGroupAwardModal()" class="absolute top-4 right-4 w-10 h-10 bg-purple-800/50 hover:bg-purple-800 rounded-full flex items-center justify-center font-bold text-xl transition-colors">✕</button>
+                <h2 class="text-2xl font-bold flex items-center justify-center gap-2">🏆 小組團體加分</h2>
+                <p class="mt-2 text-purple-200">請先選擇組別，再點擊下方加分項目</p>
+            </div>
+            
+            <div class="p-6 bg-slate-50 flex flex-col gap-6">
+                
+                <!-- Group Selectors -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-500 mb-3 text-center">選擇小組 (Select Group)</label>
+                    <div class="flex flex-wrap justify-center gap-3" id="group-selector-container">
+                        <!-- Group buttons generated dynamically -->
+                    </div>
+                    <div id="group-member-preview" class="text-center mt-3 text-sm text-purple-700 font-bold min-h-[20px]">
+                        <!-- Show member count -->
+                    </div>
+                </div>
+
+                <!-- Award Points -->
+                <div class="border-t border-slate-200 pt-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <button onclick="CQ.awardGroupPoint(1, 'Good Answer')" class="bg-white p-3 rounded-xl border-2 border-green-100 hover:border-green-400 hover:bg-green-50 transition-all text-center group">
+                            <div class="w-12 h-12 mx-auto bg-green-100 rounded-full flex items-center justify-center text-xl text-green-600 mb-2 group-hover:scale-110 transition-transform">💬</div>
+                            <div class="font-bold text-slate-700 text-sm">Good Answer</div><div class="text-xs text-green-600 mt-1">全組 +1</div>
+                        </button>
+                        <button onclick="CQ.awardGroupPoint(1, 'Teamwork')" class="bg-white p-3 rounded-xl border-2 border-teal-100 hover:border-teal-400 hover:bg-teal-50 transition-all text-center group">
+                            <div class="w-12 h-12 mx-auto bg-teal-100 rounded-full flex items-center justify-center text-xl text-teal-600 mb-2 group-hover:scale-110 transition-transform">🤝</div>
+                            <div class="font-bold text-slate-700 text-sm">Teamwork</div><div class="text-xs text-teal-600 mt-1">全組 +1</div>
+                        </button>
+                        <button onclick="CQ.awardGroupPoint(2, 'English Only')" class="bg-white p-3 rounded-xl border-2 border-emerald-100 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-center group">
+                            <div class="w-12 h-12 mx-auto bg-emerald-100 rounded-full flex items-center justify-center text-xl text-emerald-600 mb-2 group-hover:scale-110 transition-transform">🗣️</div>
+                            <div class="font-bold text-slate-700 text-sm">English Only</div><div class="text-xs text-emerald-600 mt-1">全組 +2</div>
+                        </button>
+                        <button onclick="CQ.awardGroupPoint(3, 'Perfect!')" class="bg-white p-3 rounded-xl border-2 border-yellow-200 hover:border-yellow-400 hover:bg-yellow-50 transition-all text-center group shadow-sm">
+                            <div class="w-12 h-12 mx-auto bg-yellow-100 rounded-full flex items-center justify-center text-xl text-yellow-600 mb-2 group-hover:scale-110 transition-transform anim-pulse">⭐</div>
+                            <div class="font-bold text-amber-700 text-sm">Perfect!</div><div class="text-xs text-yellow-600 mt-1">全組 +3</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="rules-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-4xl overflow-hidden modal-content shadow-2xl flex flex-col max-h-[90vh]">
             <div class="bg-indigo-600 p-6 relative text-center text-white shrink-0">
@@ -433,7 +480,7 @@
                             <div class="evo-title text-indigo-600">Magician<br><span class="text-[10px] text-slate-400 font-normal">魔法師</span></div>
                             <div class="evo-cell text-xl">📖</div><div class="evo-cell text-xl">🪄</div><div class="evo-cell text-xl">🔮</div><div class="evo-cell text-xl">🌌</div><div class="evo-cell text-2xl drop-shadow-md">🧙‍♂️</div>
 
-                            <div class="evo-title text-yellow-600">Royal<br><span class="text-[10px] text-slate-400 font-normal">王子/公主</span></div>
+                            <div class="evo-title text-yellow-600">Royal<br><span class="text-[10px] text-slate-400 font-normal">皇族</span></div>
                             <div class="evo-cell text-xl">📜</div><div class="evo-cell text-xl">🏰</div><div class="evo-cell text-xl">👑</div><div class="evo-cell text-xl">🦅</div><div class="evo-cell text-2xl drop-shadow-md">🦁</div>
 
                             <div class="evo-title text-green-600">Hunter<br><span class="text-[10px] text-slate-400 font-normal">獵人</span></div>
@@ -456,6 +503,7 @@
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ====== 您的專屬 Firebase 金鑰 ======
+        // 保持原有的設定，不要更動以確保連回原資料庫
         const firebaseConfig = {
             apiKey: "AIzaSyDBLFK7T2ewIk4qgvlBz9hfQuxEALLUezQ",
             authDomain: "typing-game-755a8.firebaseapp.com",
@@ -468,7 +516,6 @@
         };
         const PUBLIC_ROOM_ID = 'yian-class-rpg-v4'; 
 
-        // ====== 預設 506, 507, 508 學生名單 ======
         const rawRosters = {
             "506": [
                 { s:"01", c:"廖芃宇" }, { s:"02", c:"蕭聿辰" }, { s:"03", c:"張誠祐" }, { s:"04", c:"彭秉宥" }, { s:"05", c:"姜天穎" },
@@ -497,7 +544,6 @@
             ]
         };
 
-        // ====== 職業與等級設定 ======
         const JOBS = {
             'none': { bg: 'class-bg-none', color: '#64748b', name: '平民', levels: ['👤', '👤', '👤', '👤', '👤'] },
             'hero': { bg: 'class-bg-hero', color: '#ef4444', name: 'Hero', levels: ['🗡️', '⚔️', '🛡️', '🐎', '🐉'] },
@@ -513,14 +559,6 @@
             if (xp >= 35) return 3;
             if (xp >= 15) return 2;
             return 1;
-        };
-
-        const getNextLevelXP = (xp) => {
-            if (xp < 15) return 15;
-            if (xp < 35) return 35;
-            if (xp < 60) return 60;
-            if (xp < 100) return 100;
-            return 'MAX';
         };
 
         const getLevelInfo = (level) => {
@@ -543,7 +581,6 @@
             return `${d.getUTCFullYear()}-W${weekNo}`;
         };
 
-        // ====== 系統狀態 ======
         const state = {
             view: 'main',
             dbReady: false,
@@ -554,7 +591,8 @@
             students: {}, 
             selectedIds: new Set(),
             modalTargetId: null,
-            audioCtx: null
+            audioCtx: null,
+            selectedGroupForAward: 1 // 用於小組加分面板
         };
 
         let db = null;
@@ -567,14 +605,13 @@
                     const id = `${cName}-${s.s}`;
                     built[id] = {
                         id: id, class: cName, seat: s.s, zh: s.c, en: '', 
-                        job: 'none', xp: 0, todayPts: 0, history: {} 
+                        job: 'none', xp: 0, todayPts: 0, history: {}, group: 0 // 新增 group 屬性 (0 = 無)
                     };
                 });
             }
             return built;
         }
 
-        // ====== 音效與特效 ======
         function playSound(type) {
             try {
                 if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -661,7 +698,6 @@
             }
         }
 
-        // ====== Firebase 邏輯 ======
         async function syncData(silent = false) {
             if (state.syncMode === 'online' && db) {
                 try {
@@ -694,6 +730,10 @@
                         const cloudData = docSnap.data().students;
                         const sampleId = Object.keys(cloudData)[0];
                         if (cloudData[sampleId] && (cloudData[sampleId].class === '506' || cloudData[sampleId].class === '507' || cloudData[sampleId].class === '508')) {
+                            // 遷移舊資料以包含 group 屬性
+                            for(let key in cloudData) {
+                                if(typeof cloudData[key].group === 'undefined') cloudData[key].group = 0;
+                            }
                             state.students = cloudData;
                         } else {
                             state.students = buildInitialData();
@@ -723,6 +763,10 @@
                     const parsed = JSON.parse(saved);
                     const sampleId = Object.keys(parsed)[0];
                     if (parsed[sampleId] && (parsed[sampleId].class === '506' || parsed[sampleId].class === '507' || parsed[sampleId].class === '508')) {
+                         // 遷移舊資料以包含 group 屬性
+                        for(let key in parsed) {
+                            if(typeof parsed[key].group === 'undefined') parsed[key].group = 0;
+                        }
                         state.students = parsed;
                     } else {
                         state.students = buildInitialData();
@@ -734,7 +778,6 @@
             CQ.renderAll();
         }
 
-        // ====== Global CQ 物件 ======
         window.CQ = {
             switchView: (viewName) => {
                 state.view = viewName;
@@ -805,36 +848,34 @@
                     const displayName = s.en ? s.en : s.zh;
                     const subName = s.en ? s.zh : '';
                     
-                    const nextXP = getNextLevelXP(s.xp);
-                    const percent = s.xp >= 100 ? 100 : (() => {
-                        let base = s.xp < 15 ? 0 : (s.xp < 35 ? 15 : (s.xp < 60 ? 35 : 60));
-                        let target = s.xp < 15 ? 15 : (s.xp < 35 ? 35 : (s.xp < 60 ? 60 : 100));
-                        return ((s.xp - base) / (target - base)) * 100;
-                    })();
+                    // 小組徽章
+                    const groupBadge = s.group > 0 ? 
+                        `<div class="absolute top-2 left-10 bg-purple-100 text-purple-700 text-[11px] font-bold px-1.5 py-0.5 rounded shadow-sm z-10 border border-purple-200">G${s.group}</div>` 
+                        : '';
 
                     const card = document.createElement('div');
                     card.id = `card-${s.id}`;
                     card.className = `student-card bg-white rounded-2xl p-3 cursor-pointer relative overflow-hidden flex flex-col items-center group ${isSelected ? 'selected' : ''}`;
                     card.innerHTML = `
                         <div class="absolute inset-0 opacity-40 ${job.bg}"></div>
-                        <div class="absolute top-2 left-2 bg-white/90 backdrop-blur px-2 py-0.5 rounded-full text-sm font-bold text-slate-600 shadow-sm z-10">${s.seat}</div>
-                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-4xl shadow-sm border-2 ${isSelected ? 'border-blue-500' : 'border-white'} ring-4 ${lvlInfo.ring} mb-2 z-10 transition-transform group-hover:scale-110">
+                        <div class="absolute top-2 left-2 bg-white/80 backdrop-blur px-2 py-0.5 rounded-full text-xs font-bold text-slate-500 shadow-sm z-10">${s.seat}</div>
+                        ${groupBadge}
+                        <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center text-3xl shadow-sm border-2 ${isSelected ? 'border-blue-500' : 'border-white'} ring-4 ${lvlInfo.ring} mb-2 z-10 transition-transform group-hover:scale-110">
                             ${icon}
                         </div>
-                        <div class="font-bold text-slate-800 text-xl z-10 truncate w-full text-center" title="${displayName}">${displayName}</div>
-                        ${subName ? `<div class="text-sm text-slate-500 z-10 truncate w-full text-center font-bold">${subName}</div>` : ''}
+                        <div class="font-bold text-slate-800 text-lg z-10 truncate w-full text-center" title="${displayName}">${displayName}</div>
+                        ${subName ? `<div class="text-xs text-slate-500 z-10 truncate w-full text-center font-bold">${subName}</div>` : ''}
                         
-                        <div class="mt-2 w-full bg-slate-200 h-3 rounded-full overflow-hidden z-10 shadow-inner">
-                            <div class="h-full bg-blue-500 transition-all duration-500" style="width: ${percent}%"></div>
+                        <div class="mt-2 w-full bg-slate-200 h-2 rounded-full overflow-hidden z-10 shadow-inner">
+                            <div class="h-full bg-blue-500 transition-all duration-500" style="width: ${Math.min((s.xp % 100) / 20 * 100, 100)}%"></div>
                         </div>
-                        <div class="flex justify-between w-full mt-1 px-1 z-10 items-center">
-                            <span class="text-xs font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">Lv.${lvl}</span>
-                            <span class="text-xs font-bold text-slate-500 tracking-wide">${s.xp} / ${nextXP}</span>
+                        <div class="flex justify-between w-full mt-1 px-1 z-10">
+                            <span class="text-[10px] font-bold text-blue-600">Lv.${lvl}</span>
+                            <span class="text-[10px] font-bold text-slate-400">${s.xp} XP</span>
                         </div>
-                        ${s.todayPts !== 0 ? `<div class="absolute top-2 right-2 bg-${s.todayPts>0?'green':'red'}-100 text-${s.todayPts>0?'green':'red'}-700 text-sm font-bold px-2 py-0.5 rounded-full shadow-sm z-10">${s.todayPts>0?'+':''}${s.todayPts}</div>` : ''}
+                        ${s.todayPts !== 0 ? `<div class="absolute top-2 right-2 bg-${s.todayPts>0?'green':'red'}-100 text-${s.todayPts>0?'green':'red'}-700 text-xs font-bold px-2 py-0.5 rounded-full shadow-sm z-10">${s.todayPts>0?'+':''}${s.todayPts}</div>` : ''}
                     `;
 
-                    // 點擊與多選邏輯
                     let timer;
                     const onDown = () => {
                         timer = setTimeout(() => {
@@ -852,7 +893,6 @@
 
                     card.addEventListener('click', () => {
                         if(state.selectedIds.size > 0) {
-                            // 已經在多選模式下，單擊直接加入/取消選取
                             CQ.toggleSelect(s.id);
                         } else {
                             CQ.openModal(s.id);
@@ -878,7 +918,6 @@
                 CQ.renderGrid();
             },
 
-            // --- 學生操作面板 ---
             openModal: (id) => {
                 state.modalTargetId = id;
                 const s = state.students[id];
@@ -902,6 +941,15 @@
 
                 document.getElementById('modal-zh-name').innerText = s.zh;
                 document.getElementById('modal-seat-info').innerText = `Seat ${s.seat}`;
+                
+                const groupEl = document.getElementById('modal-group-info');
+                if (s.group > 0) {
+                    groupEl.innerText = `Group ${s.group}`;
+                    groupEl.classList.remove('hidden');
+                } else {
+                    groupEl.classList.add('hidden');
+                }
+                
                 document.getElementById('modal-class-info').innerText = `${job.name}`;
                 document.getElementById('modal-xp-info').innerText = `Lv.${lvl} ${lvlInfo.title} (${s.xp} XP)`;
 
@@ -928,6 +976,56 @@
             },
             closeMultiAwardModal: () => {
                 document.getElementById('multi-award-modal').classList.add('hidden');
+            },
+            
+            openGroupAwardModal: () => {
+                state.selectedGroupForAward = 1;
+                CQ.renderGroupModalUI();
+                document.getElementById('group-award-modal').classList.remove('hidden');
+            },
+            closeGroupAwardModal: () => {
+                document.getElementById('group-award-modal').classList.add('hidden');
+            },
+            selectGroupForAward: (g) => {
+                state.selectedGroupForAward = g;
+                CQ.renderGroupModalUI();
+            },
+            renderGroupModalUI: () => {
+                const container = document.getElementById('group-selector-container');
+                container.innerHTML = '';
+                
+                // 產生 1-8 組按鈕
+                for(let i=1; i<=8; i++) {
+                    const btn = document.createElement('button');
+                    const isActive = state.selectedGroupForAward === i;
+                    btn.className = `group-btn px-4 py-2 rounded-xl font-bold border-2 transition-all shadow-sm ${isActive ? 'active' : 'bg-white text-slate-600 border-slate-200 hover:border-purple-300 hover:bg-purple-50'}`;
+                    btn.innerText = `第 ${i} 組`;
+                    btn.onclick = () => CQ.selectGroupForAward(i);
+                    container.appendChild(btn);
+                }
+
+                const classStudents = Object.values(state.students).filter(s => s.class === state.activeClass && s.group === state.selectedGroupForAward);
+                const infoEl = document.getElementById('group-member-preview');
+                if (classStudents.length > 0) {
+                    const names = classStudents.map(s => s.zh).join('、');
+                    infoEl.innerText = `本班第 ${state.selectedGroupForAward} 組有 ${classStudents.length} 人：${names}`;
+                    infoEl.className = 'text-center mt-3 text-sm text-purple-700 font-bold min-h-[20px]';
+                } else {
+                    infoEl.innerText = `⚠️ 本班第 ${state.selectedGroupForAward} 組目前沒有學生`;
+                    infoEl.className = 'text-center mt-3 text-sm text-red-500 font-bold min-h-[20px]';
+                }
+            },
+            awardGroupPoint: (pts, reason) => {
+                const g = state.selectedGroupForAward;
+                const classStudents = Object.values(state.students).filter(s => s.class === state.activeClass && s.group === g);
+                
+                if(classStudents.length === 0) return alert(`第 ${g} 組沒有學生，請先到「編輯名單」設定組別！`);
+                
+                playSound('coin');
+                classStudents.forEach(s => processPoint(s.id, pts));
+                
+                CQ.closeGroupAwardModal();
+                syncData();
             },
 
             editEnNameInModal: () => {
@@ -995,7 +1093,6 @@
                 syncData();
             },
 
-            // --- 視圖 2: 編輯名單後台 ---
             renderEditList: () => {
                 const tbody = document.getElementById('edit-table-body');
                 tbody.innerHTML = '';
@@ -1007,11 +1104,22 @@
                 classStudents.forEach(s => {
                     const row = document.createElement('tr');
                     row.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors';
+                    
+                    let groupOptions = `<option value="0">無</option>`;
+                    for(let i=1; i<=8; i++) {
+                        groupOptions += `<option value="${i}" ${(s.group || 0) === i ? 'selected' : ''}>第 ${i} 組</option>`;
+                    }
+
                     row.innerHTML = `
                         <td class="p-3 font-bold text-slate-500">${s.seat}</td>
                         <td class="p-3 font-bold text-slate-800">${s.zh}</td>
                         <td class="p-3">
                             <input type="text" value="${s.en}" onblur="CQ.updateEnName('${s.id}', this.value)" class="border-2 border-slate-200 rounded px-2 py-1 outline-none focus:border-blue-500 w-32" placeholder="無">
+                        </td>
+                        <td class="p-3 text-center">
+                            <select onchange="CQ.updateGroup('${s.id}', this.value)" class="border border-slate-200 rounded p-1 outline-none bg-white font-bold text-purple-700">
+                                ${groupOptions}
+                            </select>
                         </td>
                         <td class="p-3 text-sm text-slate-600">${JOBS[s.job]?.name || '平民'}</td>
                         <td class="p-3 font-bold text-slate-700">${s.xp} / <span class="${s.todayPts>=0?'text-green-500':'text-red-500'}">${s.todayPts>0?'+':''}${s.todayPts}</span></td>
@@ -1028,23 +1136,31 @@
                     syncData();
                 }
             },
+            updateGroup: (id, groupVal) => {
+                if(state.students[id]) {
+                    state.students[id].group = parseInt(groupVal);
+                    syncData();
+                }
+            },
             addStudent: () => {
                 const seat = document.getElementById('new-seat').value.padStart(2, '0');
                 const zh = document.getElementById('new-name').value.trim();
                 const en = document.getElementById('new-en').value.trim();
+                const group = parseInt(document.getElementById('new-group').value);
                 if(!seat || !zh || seat === '00') return alert("請輸入座號與中文名");
                 
                 const id = `${state.activeClass}-${seat}`;
                 if(state.students[id]) return alert("此座號已存在！");
 
                 state.students[id] = {
-                    id, class: state.activeClass, seat, zh, en,
+                    id, class: state.activeClass, seat, zh, en, group,
                     job: 'none', xp: 0, todayPts: 0, history: {}
                 };
                 
                 document.getElementById('new-seat').value = '';
                 document.getElementById('new-name').value = '';
                 document.getElementById('new-en').value = '';
+                document.getElementById('new-group').value = '0';
                 
                 syncData();
                 CQ.renderEditList();
@@ -1103,7 +1219,7 @@
 
             exportCSV: () => {
                 const targetWeek = document.getElementById('report-week-selector').value;
-                let csv = "座號,中文名,英文名,職業,等級,總XP,本週加分,本週扣分,本週總結算,平時成績預估\n";
+                let csv = "座號,中文名,英文名,組別,職業,等級,總XP,本週加分,本週扣分,本週總結算,平時成績預估\n";
                 
                 Object.values(state.students)
                     .filter(s => s.class === state.activeClass)
@@ -1112,7 +1228,8 @@
                         const wHist = (s.history || {})[targetWeek] || { pos: 0, neg: 0 };
                         const totalWeek = wHist.pos + wHist.neg;
                         const finalScore = Math.min(100, Math.max(0, 75 + Math.floor(s.xp * 0.5) + totalWeek));
-                        csv += `="${s.seat}",${s.zh},${s.en},${JOBS[s.job]?.name||'平民'},Lv.${getLevel(s.xp)},${s.xp},${wHist.pos},${wHist.neg},${totalWeek},${finalScore}\n`;
+                        const gStr = s.group > 0 ? `第${s.group}組` : '無';
+                        csv += `="${s.seat}",${s.zh},${s.en},${gStr},${JOBS[s.job]?.name||'平民'},Lv.${getLevel(s.xp)},${s.xp},${wHist.pos},${wHist.neg},${totalWeek},${finalScore}\n`;
                     });
 
                 const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
@@ -1126,7 +1243,6 @@
             closeRules: () => document.getElementById('rules-modal').classList.add('hidden')
         };
 
-        // 處理加扣分核心邏輯 (計算升級與歷史紀錄)
         function processPoint(id, pts) {
             const s = state.students[id];
             const oldLvl = getLevel(s.xp);
@@ -1139,19 +1255,17 @@
             if(pts > 0) s.history[state.currentWeek].pos += pts;
             else s.history[state.currentWeek].neg += pts;
 
-            // 飄字動畫 (修復定位問題，加入 scrollY 確保捲動時不偏移)
             const el = document.getElementById(`card-${id}`);
             if (el) {
                 const rect = el.getBoundingClientRect();
                 createFloatingText(
-                    rect.left + rect.width/2 - 10 + window.scrollX, 
+                    rect.left + rect.width/2 - 10, 
                     rect.top + window.scrollY + 10, 
                     pts > 0 ? `+${pts}` : pts, 
                     pts > 0 ? '#10b981' : '#ef4444'
                 );
             }
 
-            // 升級判定
             if (getLevel(s.xp) > oldLvl) {
                 setTimeout(() => {
                     playSound('levelup');
@@ -1164,7 +1278,6 @@
         // ====== 啟動程式 ======
         initFirebase();
         
-        // 每日重置 TodayPts
         const lastLogin = localStorage.getItem('cq_last_date_v4');
         const todayStr = new Date().toDateString();
         if(lastLogin !== todayStr) {
