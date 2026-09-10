@@ -141,7 +141,7 @@
                 </div>
 
                 <div class="flex items-center gap-3 mb-6">
-                    <select id="edit-class-selector" onchange="CQ.renderEditList()" class="bg-slate-50 border-2 border-slate-200 text-slate-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
+                    <select id="edit-class-selector" onchange="CQ.changeClass(this.value)" class="bg-slate-50 border-2 border-slate-200 text-slate-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
                 </div>
 
                 <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6 flex flex-wrap gap-3 items-end">
@@ -208,7 +208,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-indigo-600 mb-1">🏫 班級</label>
-                        <select id="report-class-selector" onchange="CQ.renderReport()" class="bg-white border-2 border-indigo-200 text-indigo-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
+                        <select id="report-class-selector" onchange="CQ.changeClass(this.value)" class="bg-white border-2 border-indigo-200 text-indigo-800 font-bold rounded-lg px-4 py-2 outline-none"></select>
                     </div>
                     <div class="ml-auto flex items-center">
                         <div class="text-sm text-slate-500 bg-white px-3 py-2 rounded-lg border border-slate-200">
@@ -336,7 +336,16 @@
                         </div>
                     </div>
                     
-                    <div class="text-right mt-4 pt-4 border-t border-slate-200">
+                    <div class="mt-2 pt-4 border-t border-slate-200">
+                        <div class="bg-slate-100 p-3 rounded-xl flex flex-wrap items-center gap-3 border border-slate-200 shadow-inner">
+                            <span class="text-sm font-bold text-slate-700 whitespace-nowrap">✏️ 自訂加扣分:</span>
+                            <input type="number" id="custom-pts-single" class="w-24 px-3 py-1.5 rounded-lg border border-slate-300 outline-none text-center font-bold focus:border-blue-500" placeholder="如 5, -2">
+                            <input type="text" id="custom-reason-single" class="flex-1 min-w-[100px] px-3 py-1.5 rounded-lg border border-slate-300 outline-none text-sm focus:border-blue-500" placeholder="原因 (選填)">
+                            <button onclick="CQ.awardCustom('single')" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm transition-transform active:scale-95 whitespace-nowrap">送出</button>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right mt-2 pt-2">
                         <button onclick="CQ.resetJob()" class="text-xs text-slate-400 hover:text-red-500 underline">↻ 重新選擇職業</button>
                     </div>
                 </div>
@@ -370,6 +379,15 @@
                         <div class="w-12 h-12 mx-auto bg-yellow-100 rounded-full flex items-center justify-center text-xl text-yellow-600 mb-2 group-hover:scale-110 transition-transform anim-pulse">⭐</div>
                         <div class="font-bold text-amber-700 text-sm">Perfect!</div><div class="text-xs text-yellow-600 mt-1">全體 +3</div>
                     </button>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-slate-200">
+                    <div class="bg-blue-50 p-3 rounded-xl flex flex-wrap items-center gap-3 border border-blue-100 shadow-inner">
+                        <span class="text-sm font-bold text-blue-800 whitespace-nowrap">✏️ 自訂加扣分:</span>
+                        <input type="number" id="custom-pts-multi" class="w-24 px-3 py-1.5 rounded-lg border border-slate-300 outline-none text-center font-bold focus:border-blue-500" placeholder="如 5, -2">
+                        <input type="text" id="custom-reason-multi" class="flex-1 min-w-[100px] px-3 py-1.5 rounded-lg border border-slate-300 outline-none text-sm focus:border-blue-500" placeholder="原因 (選填)">
+                        <button onclick="CQ.awardCustom('multi')" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm transition-transform active:scale-95 whitespace-nowrap">送出</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -415,6 +433,15 @@
                             <div class="w-12 h-12 mx-auto bg-yellow-100 rounded-full flex items-center justify-center text-xl text-yellow-600 mb-2 group-hover:scale-110 transition-transform anim-pulse">⭐</div>
                             <div class="font-bold text-amber-700 text-sm">Perfect!</div><div class="text-xs text-yellow-600 mt-1">全組 +3</div>
                         </button>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                        <div class="bg-purple-50 p-3 rounded-xl flex flex-wrap items-center gap-3 border border-purple-100 shadow-inner">
+                            <span class="text-sm font-bold text-purple-800 whitespace-nowrap">✏️ 自訂加扣分:</span>
+                            <input type="number" id="custom-pts-group" class="w-24 px-3 py-1.5 rounded-lg border border-slate-300 outline-none text-center font-bold focus:border-purple-500" placeholder="如 5, -2">
+                            <input type="text" id="custom-reason-group" class="flex-1 min-w-[100px] px-3 py-1.5 rounded-lg border border-slate-300 outline-none text-sm focus:border-purple-500" placeholder="原因 (選填)">
+                            <button onclick="CQ.awardCustom('group')" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg shadow-sm transition-transform active:scale-95 whitespace-nowrap">送出</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1021,11 +1048,48 @@
                 
                 if(classStudents.length === 0) return alert(`第 ${g} 組沒有學生，請先到「編輯名單」設定組別！`);
                 
-                playSound('coin');
+                if(pts < 0) {
+                    playSound('error');
+                    document.body.classList.add('shake-screen');
+                    setTimeout(()=>document.body.classList.remove('shake-screen'), 500);
+                } else {
+                    playSound('coin');
+                }
+                
                 classStudents.forEach(s => processPoint(s.id, pts));
                 
                 CQ.closeGroupAwardModal();
                 syncData();
+            },
+            
+            awardCustom: (type) => {
+                let ptsInput, reasonInput;
+                if (type === 'single') {
+                    ptsInput = document.getElementById('custom-pts-single');
+                    reasonInput = document.getElementById('custom-reason-single');
+                } else if (type === 'multi') {
+                    ptsInput = document.getElementById('custom-pts-multi');
+                    reasonInput = document.getElementById('custom-reason-multi');
+                } else if (type === 'group') {
+                    ptsInput = document.getElementById('custom-pts-group');
+                    reasonInput = document.getElementById('custom-reason-group');
+                }
+                
+                const pts = parseInt(ptsInput.value);
+                const reason = reasonInput.value.trim() || '自訂分數';
+                
+                if (isNaN(pts) || pts === 0) return alert('請輸入有效的分數 (非 0)！');
+                
+                if (type === 'group') {
+                    CQ.awardGroupPoint(pts, reason);
+                } else if (pts > 0) {
+                    CQ.awardPoint(pts, reason);
+                } else {
+                    CQ.deductPoint(pts, reason);
+                }
+                
+                ptsInput.value = '';
+                reasonInput.value = '';
             },
 
             editEnNameInModal: () => {
