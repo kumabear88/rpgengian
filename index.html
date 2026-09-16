@@ -64,7 +64,6 @@
         .evo-header { font-size: 0.75rem; font-weight: bold; color: #64748b; background: #f8fafc; border: none; }
         .evo-title { font-weight: bold; font-size: 0.85rem; color: #334155; text-align: right; padding-right: 8px; }
         
-        /* Custom Group Button Style */
         .group-btn.active { background-color: #9333ea; color: white; border-color: #7e22ce; transform: scale(1.05); }
     </style>
 </head>
@@ -106,7 +105,7 @@
                 
                 <div class="absolute -bottom-3 -right-3 bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-lg border-2 border-white transform rotate-[-5deg] z-20">
                     <div class="flex items-center gap-1"><span>📌</span> 115學年度 第1學期</div>
-                    <div class="text-[10px] opacity-90 mt-0.5">Week 1 (9/3 軍人節無放假)</div>
+                    <div class="text-[10px] opacity-90 mt-0.5">全新等級機制上線！</div>
                 </div>
 
                 <div class="flex items-center gap-3">
@@ -134,6 +133,7 @@
         </main>
 
         <main id="view-edit" class="hidden max-w-5xl mx-auto px-4 py-6">
+            <!-- Edit View (保持不變) -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2"><span>✏️</span> 名單管理與分組設定</h2>
@@ -190,6 +190,7 @@
         </main>
 
         <main id="view-report" class="hidden max-w-5xl mx-auto px-4 py-6">
+            <!-- Report View (稍微調整欄位顯示) -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
                 <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
                     <h2 class="text-2xl font-bold text-indigo-800 flex items-center gap-2"><span>📊</span> 課堂歷史報表 (Report)</h2>
@@ -237,6 +238,7 @@
         </main>
     </div>
 
+    <!-- Student Detail Modal -->
     <div id="student-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden modal-content shadow-2xl border-4 border-white flex flex-col max-h-[90vh]">
             
@@ -285,6 +287,7 @@
                     </div>
                 </div>
 
+                <!-- Award Points Section (保持不變) -->
                 <div id="section-give-points" class="hidden space-y-6">
                     <div>
                         <div class="flex items-center gap-2 mb-3 px-2">
@@ -353,6 +356,7 @@
         </div>
     </div>
 
+    <!-- Multi-Award & Group Modals (保持不變) -->
     <div id="multi-award-modal" class="fixed inset-0 modal-overlay hidden z-[60] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden modal-content shadow-2xl border-4 border-white flex flex-col">
             <div class="p-6 bg-blue-600 text-white text-center relative">
@@ -402,19 +406,15 @@
             </div>
             
             <div class="p-6 bg-slate-50 flex flex-col gap-6">
-                
                 <!-- Group Selectors -->
                 <div>
                     <label class="block text-sm font-bold text-slate-500 mb-3 text-center">選擇小組 (Select Group)</label>
                     <div class="flex flex-wrap justify-center gap-3" id="group-selector-container">
-                        <!-- Group buttons generated dynamically -->
                     </div>
                     <div id="group-member-preview" class="text-center mt-3 text-sm text-purple-700 font-bold min-h-[20px]">
-                        <!-- Show member count -->
                     </div>
                 </div>
 
-                <!-- Award Points -->
                 <div class="border-t border-slate-200 pt-6">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <button onclick="CQ.awardGroupPoint(1, 'Good Answer')" class="bg-white p-3 rounded-xl border-2 border-green-100 hover:border-green-400 hover:bg-green-50 transition-all text-center group">
@@ -448,44 +448,43 @@
         </div>
     </div>
 
+    <!-- 遊戲規則 Modal (更新雙軌升級說明) -->
     <div id="rules-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-4xl overflow-hidden modal-content shadow-2xl flex flex-col max-h-[90vh]">
             <div class="bg-indigo-600 p-6 relative text-center text-white shrink-0">
                 <button onclick="CQ.closeRules()" class="absolute top-4 right-4 w-10 h-10 bg-indigo-800/50 hover:bg-indigo-800 rounded-full flex items-center justify-center font-bold text-xl transition-colors">✕</button>
                 <h2 class="text-2xl font-bold">📖 ClassQuest 遊戲規則與進化表</h2>
-                <p class="text-indigo-200 mt-1">努力表現，看看你能進化成什麼樣子！</p>
+                <p class="text-indigo-200 mt-1">努力表現獲得 XP，提升等級並進化職業！</p>
             </div>
             
             <div class="p-6 overflow-y-auto flex-1 bg-slate-50">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
                         <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100 text-blue-800">
-                            <h3 class="font-bold mb-2 flex items-center gap-2 text-lg"><span>🎯</span> 如何獲得 XP 經驗值？</h3>
-                            <ul class="list-disc pl-5 space-y-1 text-sm">
-                                <li>上課大聲回答問題 (Good Answer) <strong class="text-green-600">+1 XP</strong></li>
-                                <li>小組活動互相合作 (Teamwork) <strong class="text-green-600">+1 XP</strong></li>
-                                <li>努力嘗試只說英文 (English Only) <strong class="text-emerald-600">+2 XP</strong></li>
-                                <li>表現超級完美，老師特別加分 (Perfect!) <strong class="text-yellow-600">+3 XP</strong></li>
+                            <h3 class="font-bold mb-2 flex items-center gap-2 text-lg"><span>🎯</span> 雙軌升級機制 (全新!)</h3>
+                            <ul class="list-disc pl-5 space-y-2 text-sm">
+                                <li><strong>等級 (Level)：</strong>每累積 <strong class="text-blue-600">15 XP</strong> 即可無上限提升 1 個等級。作業或表現優異都能讓你快速升級！</li>
+                                <li><strong>階級 (Rank)：</strong>每達到指定 Level，你的職業圖示就會進化，解鎖更酷炫的外觀！</li>
                                 <li class="text-red-500 font-bold mt-2">注意：發呆、講中文、沒帶課本會被扣除 XP 喔！</li>
                             </ul>
                         </div>
                         
-                        <h3 class="font-bold text-lg text-slate-800 mb-3 border-b-2 border-slate-200 pb-2">🌱 等級階段 (Level Stages)</h3>
+                        <h3 class="font-bold text-lg text-slate-800 mb-3 border-b-2 border-slate-200 pb-2">🌱 職業進化階級 (Rank Stages)</h3>
                         <div class="space-y-2">
                             <div class="flex justify-between items-center p-2 px-3 bg-white rounded-lg border border-slate-200">
-                                <span class="font-bold text-slate-600">Lv. 1 新手 (Newbie)</span> <span class="text-sm font-mono text-slate-400">0 ~ 14 XP</span>
+                                <span class="font-bold text-slate-600">Rank 1 新手 (Newbie)</span> <span class="text-sm font-mono text-slate-400">Lv. 1 ~ 4</span>
                             </div>
                             <div class="flex justify-between items-center p-2 px-3 bg-white rounded-lg border border-slate-200">
-                                <span class="font-bold text-green-600">Lv. 2 學習者 (Learner)</span> <span class="text-sm font-mono text-slate-400">15 ~ 34 XP</span>
+                                <span class="font-bold text-green-600">Rank 2 學習者 (Learner)</span> <span class="text-sm font-mono text-slate-400">Lv. 5 ~ 9</span>
                             </div>
                             <div class="flex justify-between items-center p-2 px-3 bg-white rounded-lg border border-slate-200">
-                                <span class="font-bold text-blue-600">Lv. 3 探索者 (Explorer)</span> <span class="text-sm font-mono text-slate-400">35 ~ 59 XP</span>
+                                <span class="font-bold text-blue-600">Rank 3 探索者 (Explorer)</span> <span class="text-sm font-mono text-slate-400">Lv. 10 ~ 14</span>
                             </div>
                             <div class="flex justify-between items-center p-2 px-3 bg-white rounded-lg border border-slate-200">
-                                <span class="font-bold text-purple-600">Lv. 4 專家 (Expert)</span> <span class="text-sm font-mono text-slate-400">60 ~ 99 XP</span>
+                                <span class="font-bold text-purple-600">Rank 4 專家 (Expert)</span> <span class="text-sm font-mono text-slate-400">Lv. 15 ~ 19</span>
                             </div>
                             <div class="flex justify-between items-center p-2 px-3 bg-yellow-50 rounded-lg border border-yellow-300">
-                                <span class="font-bold text-yellow-700 flex items-center gap-1">✨ Lv. 5 大師 (Master)</span> <span class="text-sm font-mono font-bold text-yellow-600">100+ XP</span>
+                                <span class="font-bold text-yellow-700 flex items-center gap-1">✨ Rank 5 大師 (Master)</span> <span class="text-sm font-mono font-bold text-yellow-600">Lv. 20+</span>
                             </div>
                         </div>
                     </div>
@@ -494,12 +493,12 @@
                         <h3 class="font-bold text-lg text-slate-800 mb-4 border-b-2 border-slate-200 pb-2 flex items-center gap-2"><span>🗺️</span> 職業專屬進化軌跡</h3>
                         
                         <div class="evolution-grid">
-                            <div class="evo-header">職業 \ 等級</div>
-                            <div class="evo-header">Lv. 1</div>
-                            <div class="evo-header">Lv. 2</div>
-                            <div class="evo-header">Lv. 3</div>
-                            <div class="evo-header">Lv. 4</div>
-                            <div class="evo-header text-yellow-600">Lv. 5 ✨</div>
+                            <div class="evo-header">職業 \ 階級</div>
+                            <div class="evo-header">Rank 1<br><span class="text-[9px] font-normal text-slate-400">Lv.1</span></div>
+                            <div class="evo-header">Rank 2<br><span class="text-[9px] font-normal text-slate-400">Lv.5</span></div>
+                            <div class="evo-header">Rank 3<br><span class="text-[9px] font-normal text-slate-400">Lv.10</span></div>
+                            <div class="evo-header">Rank 4<br><span class="text-[9px] font-normal text-slate-400">Lv.15</span></div>
+                            <div class="evo-header text-yellow-600">Rank 5<br><span class="text-[9px] font-normal text-yellow-600">Lv.20+</span></div>
 
                             <div class="evo-title text-red-600">Hero<br><span class="text-[10px] text-slate-400 font-normal">戰士</span></div>
                             <div class="evo-cell text-xl">🗡️</div><div class="evo-cell text-xl">⚔️</div><div class="evo-cell text-xl">🛡️</div><div class="evo-cell text-xl">🐎</div><div class="evo-cell text-2xl drop-shadow-md">🐉</div>
@@ -529,8 +528,6 @@
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ====== 您的專屬 Firebase 金鑰 ======
-        // 保持原有的設定，不要更動以確保連回原資料庫
         const firebaseConfig = {
             apiKey: "AIzaSyDBLFK7T2ewIk4qgvlBz9hfQuxEALLUezQ",
             authDomain: "typing-game-755a8.firebaseapp.com",
@@ -580,24 +577,35 @@
             'beast': { bg: 'class-bg-beast', color: '#f97316', name: 'Beast', levels: ['🐾', '🦴', '🐅', '🐻', '🦖'] }
         };
 
+        // ================= 全新雙軌升級邏輯 =================
+        const XP_PER_LEVEL = 15; // 每 15 XP 升 1 級
+        
+        // 1. 取得無限數字等級
         const getLevel = (xp) => {
-            if (xp >= 100) return 5;
-            if (xp >= 60) return 4;
-            if (xp >= 35) return 3;
-            if (xp >= 15) return 2;
+            return Math.floor(xp / XP_PER_LEVEL) + 1;
+        };
+
+        // 2. 根據等級取得階級 (Rank 1~5，用於決定圖示與稱號)
+        const getRank = (level) => {
+            if (level >= 20) return 5;
+            if (level >= 15) return 4;
+            if (level >= 10) return 3;
+            if (level >= 5) return 2;
             return 1;
         };
 
-        const getLevelInfo = (level) => {
+        // 3. 取得該階級的稱號與樣式
+        const getRankInfo = (rank) => {
             const info = {
-                1: { title: 'Newbie', ring: 'ring-slate-200' },
-                2: { title: 'Learner', ring: 'ring-green-400' },
-                3: { title: 'Explorer', ring: 'ring-blue-400' },
-                4: { title: 'Expert', ring: 'ring-purple-400' },
-                5: { title: 'Master ✨', ring: 'ring-yellow-400 ring-offset-2 ring-offset-yellow-100 anim-pulse' }
+                1: { title: 'Newbie (新手)', ring: 'ring-slate-200' },
+                2: { title: 'Learner (學習者)', ring: 'ring-green-400' },
+                3: { title: 'Explorer (探索者)', ring: 'ring-blue-400' },
+                4: { title: 'Expert (專家)', ring: 'ring-purple-400' },
+                5: { title: 'Master ✨ (大師)', ring: 'ring-yellow-400 ring-offset-2 ring-offset-yellow-100 anim-pulse' }
             };
-            return info[level] || info[1];
+            return info[rank] || info[1];
         };
+        // ==================================================
 
         const getWeekIdentifier = (date = new Date()) => {
             const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -619,7 +627,7 @@
             selectedIds: new Set(),
             modalTargetId: null,
             audioCtx: null,
-            selectedGroupForAward: 1 // 用於小組加分面板
+            selectedGroupForAward: 1
         };
 
         let db = null;
@@ -632,7 +640,7 @@
                     const id = `${cName}-${s.s}`;
                     built[id] = {
                         id: id, class: cName, seat: s.s, zh: s.c, en: '', 
-                        job: 'none', xp: 0, todayPts: 0, history: {}, group: 0 // 新增 group 屬性 (0 = 無)
+                        job: 'none', xp: 0, todayPts: 0, history: {}, group: 0
                     };
                 });
             }
@@ -757,7 +765,6 @@
                         const cloudData = docSnap.data().students;
                         const sampleId = Object.keys(cloudData)[0];
                         if (cloudData[sampleId] && (cloudData[sampleId].class === '506' || cloudData[sampleId].class === '507' || cloudData[sampleId].class === '508')) {
-                            // 遷移舊資料以包含 group 屬性
                             for(let key in cloudData) {
                                 if(typeof cloudData[key].group === 'undefined') cloudData[key].group = 0;
                             }
@@ -790,7 +797,6 @@
                     const parsed = JSON.parse(saved);
                     const sampleId = Object.keys(parsed)[0];
                     if (parsed[sampleId] && (parsed[sampleId].class === '506' || parsed[sampleId].class === '507' || parsed[sampleId].class === '508')) {
-                         // 遷移舊資料以包含 group 屬性
                         for(let key in parsed) {
                             if(typeof parsed[key].group === 'undefined') parsed[key].group = 0;
                         }
@@ -868,14 +874,19 @@
                 classStudents.forEach(s => {
                     const isSelected = state.selectedIds.has(s.id);
                     const job = JOBS[s.job] || JOBS['none'];
+                    
+                    // 使用新的雙軌機制取得數值
                     const lvl = getLevel(s.xp);
-                    const lvlInfo = getLevelInfo(lvl);
-                    const icon = job.levels[lvl-1];
+                    const rank = getRank(lvl);
+                    const rankInfo = getRankInfo(rank);
+                    const icon = job.levels[rank-1]; // 使用 Rank 來決定圖示
+
+                    // 計算升至下一級的進度百分比 (0-100%)
+                    const progressPercent = ((s.xp % XP_PER_LEVEL) / XP_PER_LEVEL) * 100;
 
                     const displayName = s.en ? s.en : s.zh;
                     const subName = s.en ? s.zh : '';
                     
-                    // 小組徽章
                     const groupBadge = s.group > 0 ? 
                         `<div class="absolute top-2 left-10 bg-purple-100 text-purple-700 text-[11px] font-bold px-1.5 py-0.5 rounded shadow-sm z-10 border border-purple-200">G${s.group}</div>` 
                         : '';
@@ -887,14 +898,14 @@
                         <div class="absolute inset-0 opacity-40 ${job.bg}"></div>
                         <div class="absolute top-2 left-2 bg-white/80 backdrop-blur px-2 py-0.5 rounded-full text-xs font-bold text-slate-500 shadow-sm z-10">${s.seat}</div>
                         ${groupBadge}
-                        <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center text-3xl shadow-sm border-2 ${isSelected ? 'border-blue-500' : 'border-white'} ring-4 ${lvlInfo.ring} mb-2 z-10 transition-transform group-hover:scale-110">
+                        <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center text-3xl shadow-sm border-2 ${isSelected ? 'border-blue-500' : 'border-white'} ring-4 ${rankInfo.ring} mb-2 z-10 transition-transform group-hover:scale-110">
                             ${icon}
                         </div>
                         <div class="font-bold text-slate-800 text-lg z-10 truncate w-full text-center" title="${displayName}">${displayName}</div>
                         ${subName ? `<div class="text-xs text-slate-500 z-10 truncate w-full text-center font-bold">${subName}</div>` : ''}
                         
                         <div class="mt-2 w-full bg-slate-200 h-2 rounded-full overflow-hidden z-10 shadow-inner">
-                            <div class="h-full bg-blue-500 transition-all duration-500" style="width: ${Math.min((s.xp % 100) / 20 * 100, 100)}%"></div>
+                            <div class="h-full bg-blue-500 transition-all duration-300" style="width: ${progressPercent}%"></div>
                         </div>
                         <div class="flex justify-between w-full mt-1 px-1 z-10">
                             <span class="text-[10px] font-bold text-blue-600">Lv.${lvl}</span>
@@ -952,9 +963,12 @@
 
                 const modal = document.getElementById('student-modal');
                 const job = JOBS[s.job] || JOBS['none'];
+                
+                // 應用雙軌制
                 const lvl = getLevel(s.xp);
-                const lvlInfo = getLevelInfo(lvl);
-                const icon = job.levels[lvl-1];
+                const rank = getRank(lvl);
+                const rankInfo = getRankInfo(rank);
+                const icon = job.levels[rank-1];
 
                 document.getElementById('modal-header').className = `p-6 relative text-center ${job.bg}`;
                 document.getElementById('modal-avatar').innerHTML = icon;
@@ -978,7 +992,7 @@
                 }
                 
                 document.getElementById('modal-class-info').innerText = `${job.name}`;
-                document.getElementById('modal-xp-info').innerText = `Lv.${lvl} ${lvlInfo.title} (${s.xp} XP)`;
+                document.getElementById('modal-xp-info').innerText = `Lv.${lvl} ${rankInfo.title} (${s.xp} XP)`;
 
                 if(s.job === 'none') {
                     document.getElementById('section-choose-class').classList.remove('hidden');
@@ -995,7 +1009,6 @@
                 document.getElementById('student-modal').classList.add('hidden');
             },
             
-            // 多選加分面板
             awardSelectedModal: () => {
                 if(state.selectedIds.size === 0) return alert("請先在畫面上長按或點選學生卡片！");
                 document.getElementById('multi-award-count').innerText = state.selectedIds.size;
@@ -1021,7 +1034,6 @@
                 const container = document.getElementById('group-selector-container');
                 container.innerHTML = '';
                 
-                // 產生 1-8 組按鈕
                 for(let i=1; i<=8; i++) {
                     const btn = document.createElement('button');
                     const isActive = state.selectedGroupForAward === i;
@@ -1266,12 +1278,13 @@
                     const finalScore = Math.min(100, Math.max(0, 75 + Math.floor(s.xp * 0.5) + totalWeek));
 
                     const lvl = getLevel(s.xp);
+                    const rank = getRank(lvl);
                     const row = document.createElement('tr');
                     row.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors';
                     row.innerHTML = `
                         <td class="p-3 font-bold text-slate-500">${s.seat}</td>
                         <td class="p-3 font-bold text-slate-800">${s.zh} ${s.en ? `<span class="text-sm text-slate-400 font-normal">(${s.en})</span>`:''}</td>
-                        <td class="p-3 text-sm text-slate-600">${JOBS[s.job]?.name||'平民'} Lv.${lvl}</td>
+                        <td class="p-3 text-sm text-slate-600">${JOBS[s.job]?.name||'平民'} Lv.${lvl} (R${rank})</td>
                         <td class="p-3 font-bold text-green-600">+${wHist.pos}</td>
                         <td class="p-3 font-bold text-red-500">${wHist.neg}</td>
                         <td class="p-3 font-bold text-indigo-700 text-lg">${totalWeek > 0 ? '+'+totalWeek : totalWeek}</td>
@@ -1283,7 +1296,7 @@
 
             exportCSV: () => {
                 const targetWeek = document.getElementById('report-week-selector').value;
-                let csv = "座號,中文名,英文名,組別,職業,等級,總XP,本週加分,本週扣分,本週總結算,平時成績預估\n";
+                let csv = "座號,中文名,英文名,組別,職業,等級(Level),階級(Rank),總XP,本週加分,本週扣分,本週總結算,平時成績預估\n";
                 
                 Object.values(state.students)
                     .filter(s => s.class === state.activeClass)
@@ -1293,7 +1306,9 @@
                         const totalWeek = wHist.pos + wHist.neg;
                         const finalScore = Math.min(100, Math.max(0, 75 + Math.floor(s.xp * 0.5) + totalWeek));
                         const gStr = s.group > 0 ? `第${s.group}組` : '無';
-                        csv += `="${s.seat}",${s.zh},${s.en},${gStr},${JOBS[s.job]?.name||'平民'},Lv.${getLevel(s.xp)},${s.xp},${wHist.pos},${wHist.neg},${totalWeek},${finalScore}\n`;
+                        const lvl = getLevel(s.xp);
+                        const rank = getRank(lvl);
+                        csv += `="${s.seat}",${s.zh},${s.en},${gStr},${JOBS[s.job]?.name||'平民'},${lvl},${rank},${s.xp},${wHist.pos},${wHist.neg},${totalWeek},${finalScore}\n`;
                     });
 
                 const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
@@ -1307,9 +1322,13 @@
             closeRules: () => document.getElementById('rules-modal').classList.add('hidden')
         };
 
+        // 處理加扣分邏輯 (更新觸發雙軌警報)
         function processPoint(id, pts) {
             const s = state.students[id];
+            
+            // 記錄加分前的狀態
             const oldLvl = getLevel(s.xp);
+            const oldRank = getRank(oldLvl);
             
             s.xp = Math.max(0, s.xp + pts);
             s.todayPts += pts;
@@ -1330,11 +1349,19 @@
                 );
             }
 
-            if (getLevel(s.xp) > oldLvl) {
+            // 檢查加分後的新狀態
+            const newLvl = getLevel(s.xp);
+            const newRank = getRank(newLvl);
+
+            if (newLvl > oldLvl) {
                 setTimeout(() => {
                     playSound('levelup');
                     shootConfetti();
-                    alert(`🎉 恭喜！${s.zh} 升級到 Level ${getLevel(s.xp)} 了！`);
+                    if (newRank > oldRank) {
+                        alert(`🎉 太神啦！${s.zh} 不僅升到了 Level ${newLvl}，職業還進化成了 Rank ${newRank}！`);
+                    } else {
+                        alert(`🎉 恭喜！${s.zh} 升級到 Level ${newLvl} 了！`);
+                    }
                 }, 800);
             }
         }
