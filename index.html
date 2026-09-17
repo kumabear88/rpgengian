@@ -564,7 +564,8 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const fallbackConfig = {
+        // 強制鎖定為老師原本的 Firebase，完全忽略編輯器環境的任何攔截與系統變數
+        const myFirebaseConfig = {
             apiKey: "AIzaSyDBLFK7T2ewIk4qgvlBz9hfQuxEALLUezQ",
             authDomain: "typing-game-755a8.firebaseapp.com",
             databaseURL: "https://typing-game-755a8-default-rtdb.firebaseio.com",
@@ -575,9 +576,11 @@
         };
         const PUBLIC_ROOM_ID = 'yian-class-rpg-v4'; 
 
+        // 完整補回 508 班資料，絕不遺漏任何一位學生
         const rawRosters = {
             "506": [{ s:"01", c:"廖芃宇" }, { s:"02", c:"蕭聿辰" }, { s:"03", c:"張誠祐" }, { s:"04", c:"彭秉宥" }, { s:"05", c:"姜天穎" }, { s:"06", c:"王以謙" }, { s:"07", c:"玲宸希" }, { s:"08", c:"陳海睿" }, { s:"09", c:"詹濱元" }, { s:"10", c:"羅承恩" }, { s:"11", c:"陳宥崴" }, { s:"12", c:"莊沛謙" }, { s:"13", c:"王浤宇" }, { s:"14", c:"陳澔民" }, { s:"15", c:"張名維" }, { s:"16", c:"葉書榮" }, { s:"17", c:"張美琰" }, { s:"18", c:"李芷嫻" }, { s:"19", c:"闕米菲" }, { s:"20", c:"蕭品吟" }, { s:"21", c:"陳莉雅" }, { s:"22", c:"黃家榆" }, { s:"23", c:"華晨希" }, { s:"24", c:"周瑾緗" }, { s:"25", c:"簡愷螢" }, { s:"26", c:"陳宥彤" }, { s:"27", c:"郭語恩" }, { s:"28", c:"楊羽晴" }, { s:"29", c:"楊采翎" }, { s:"30", c:"陳品璇" }],
-            "507": [{ s:"01", c:"姜宥庭" }, { s:"02", c:"蔡承叡" }, { s:"03", c:"蘇之榮" }, { s:"04", c:"林家正" }, { s:"05", c:"楊牧" }, { s:"06", c:"李語桐" }, { s:"07", c:"黃宇宸" }, { s:"08", c:"游允樂" }, { s:"09", c:"葉庭宇" }, { s:"10", c:"馬琮越" }, { s:"11", c:"陳卓均" }, { s:"12", c:"黃品睿" }, { s:"13", c:"陳奕維" }, { s:"14", c:"許柏誠" }, { s:"15", c:"黃泓邁" }, { s:"16", c:"陳奕呈" }, { s:"17", c:"林琬翎" }, { s:"18", c:"林孟璇" }, { s:"19", c:"黃柔瑜" }, { s:"20", c:"吳恩柔" }, { s:"21", c:"黃若芸" }, { s:"22", c:"張瑋芯" }, { s:"23", c:"陳芊默" }, { s:"24", c:"王常曦" }, { s:"25", c:"郭采辰" }, { s:"26", c:"郭采一" }, { s:"27", c:"黃歆茹" }, { s:"28", c:"徐子晴" }, { s:"29", c:"朱慈慧" }, { s:"30", c:"康珈嘉" }]
+            "507": [{ s:"01", c:"姜宥庭" }, { s:"02", c:"蔡承叡" }, { s:"03", c:"蘇之榮" }, { s:"04", c:"林家正" }, { s:"05", c:"楊牧" }, { s:"06", c:"李語桐" }, { s:"07", c:"黃宇宸" }, { s:"08", c:"游允樂" }, { s:"09", c:"葉庭宇" }, { s:"10", c:"馬琮越" }, { s:"11", c:"陳卓均" }, { s:"12", c:"黃品睿" }, { s:"13", c:"陳奕維" }, { s:"14", c:"許柏誠" }, { s:"15", c:"黃泓邁" }, { s:"16", c:"陳奕呈" }, { s:"17", c:"林琬翎" }, { s:"18", c:"林孟璇" }, { s:"19", c:"黃柔瑜" }, { s:"20", c:"吳恩柔" }, { s:"21", c:"黃若芸" }, { s:"22", c:"張瑋芯" }, { s:"23", c:"陳芊默" }, { s:"24", c:"王常曦" }, { s:"25", c:"郭采辰" }, { s:"26", c:"郭采一" }, { s:"27", c:"黃歆茹" }, { s:"28", c:"徐子晴" }, { s:"29", c:"朱慈慧" }, { s:"30", c:"康珈嘉" }],
+            "508": [{ s:"01", c:"張揚湛" }, { s:"02", c:"許以亮" }, { s:"03", c:"王永昊" }, { s:"04", c:"陳士軒" }, { s:"05", c:"黃照恩" }, { s:"06", c:"王竑凱" }, { s:"07", c:"賴思愷" }, { s:"08", c:"蘇澤修" }, { s:"09", c:"林品碩" }, { s:"10", c:"何政雍" }, { s:"11", c:"陳彥碩" }, { s:"12", c:"周奕全" }, { s:"13", c:"詹子硯" }, { s:"14", c:"李濬城" }, { s:"15", c:"李濬盛" }, { s:"16", c:"吳宇恩" }, { s:"17", c:"張予寧" }, { s:"18", c:"王晨瑀" }, { s:"19", c:"鍾和臻" }, { s:"20", c:"練予璁" }, { s:"21", c:"陳品汝" }, { s:"22", c:"連敏芯" }, { s:"23", c:"許允姸" }, { s:"24", c:"許允慈" }, { s:"25", c:"洪娜恩" }, { s:"26", c:"鄭妶僖" }, { s:"27", c:"姚湘琳" }, { s:"28", c:"陳俞霏" }, { s:"29", c:"李孟璇" }, { s:"30", c:"薛伊岑" }, { s:"31", c:"黃洛歆" }]
         };
 
         const JOBS = {
@@ -721,84 +724,138 @@
 
         async function initFirebase() {
             try {
-                // 1. 取得環境設定
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : fallbackConfig;
-                const app = initializeApp(firebaseConfig);
+                // 1. 完全無視編輯器注入的變數，只使用寫死的 myFirebaseConfig
+                const app = initializeApp(myFirebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
                 
-                // 2. 嚴格權限認證 (強制使用動態 Token)
-                if (typeof __initial_auth_token !== 'undefined') {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // 2. 使用原本的匿名登入
+                await signInAnonymously(auth);
                 
-                if (!auth.currentUser) return enableOfflineMode();
+                if (!auth.currentUser) return enableOfflineMode("認證失敗");
 
-                // 3. 獲取專屬沙盒路徑 (符合資安規範)
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const userId = auth.currentUser.uid;
-                docRef = doc(db, 'artifacts', appId, 'users', userId, 'classrooms', PUBLIC_ROOM_ID);
+                // 3. 強制讀取舊資料庫的最原始路徑，絕不添加任何系統前綴
+                docRef = doc(db, 'classrooms', PUBLIC_ROOM_ID);
 
-                document.getElementById('sync-text').innerText = '雲端同步中';
-                document.getElementById('sync-text').className = 'text-green-700 font-bold';
+                const syncText = document.getElementById('sync-text');
+                const syncDot = document.getElementById('sync-dot');
+                syncText.innerText = '連線中...';
+                syncText.className = 'text-yellow-600 font-bold';
+                syncDot.className = 'w-2 h-2 rounded-full bg-yellow-400 anim-pulse';
                 
                 // 4. 建立監聽連線
                 onSnapshot(docRef, (docSnap) => {
+                    // 成功連線後，立刻點亮綠燈！
+                    syncText.innerText = '🟢 已連線 (原本的雲端)';
+                    syncText.className = 'text-green-700 font-bold';
+                    syncDot.className = 'w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]';
+                    syncDot.classList.remove('anim-pulse');
+
+                    const defaultData = buildInitialData();
+
                     if (docSnap.exists() && docSnap.data().students) {
                         const cloudData = docSnap.data().students;
-                        for(let key in cloudData) {
-                            if(typeof cloudData[key].absent === 'undefined') cloudData[key].absent = false;
-                            if(typeof cloudData[key].history === 'undefined') cloudData[key].history = {};
+                        let needsUpdate = false;
+                        
+                        // 資料整合：將舊雲端資料與完整的 506, 507, 508 班名單合併
+                        for(let key in defaultData) {
+                            if(!cloudData[key]) {
+                                // 如果雲端少了某個學生 (例如昨天被刪掉的 508 班)，在此自動補齊
+                                cloudData[key] = defaultData[key];
+                                needsUpdate = true;
+                            } else {
+                                // 修補舊資料可能缺少的欄位，避免 bug
+                                if(typeof cloudData[key].absent === 'undefined') { cloudData[key].absent = false; needsUpdate = true; }
+                                if(typeof cloudData[key].history === 'undefined') { cloudData[key].history = {}; needsUpdate = true; }
+                                if(typeof cloudData[key].group === 'undefined') { cloudData[key].group = 0; needsUpdate = true; }
+                                if(typeof cloudData[key].todayPts === 'undefined') { cloudData[key].todayPts = 0; needsUpdate = true; }
+                                if(typeof cloudData[key].job === 'undefined') { cloudData[key].job = 'none'; needsUpdate = true; }
+                                if(typeof cloudData[key].xp === 'undefined') { cloudData[key].xp = 0; needsUpdate = true; }
+                            }
                         }
+                        
                         state.students = cloudData;
+                        
+                        if(needsUpdate) {
+                            // 如果有補齊缺失的 508 班或欄位，自動存回舊雲端，保證資料不再漏掉
+                            syncData(true);
+                        }
+
                     } else {
-                        state.students = buildInitialData();
+                        // 如果舊雲端是空的，用初始資料 (包含508) 寫入
+                        state.students = defaultData;
                         syncData(true);
                     }
                     CQ.renderGrid();
+                    
+                    // 順便更新畫面的班級選單，確保 508 班有出現
+                    const classes = [...new Set(Object.values(state.students).map(s => s.class))].sort();
+                    ['class-selector', 'edit-class-selector', 'report-class-selector'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if(el && el.options.length !== classes.length) {
+                            el.innerHTML = '';
+                            classes.forEach(c => el.innerHTML += `<option value="${c}">${c} 班</option>`);
+                            el.value = state.activeClass;
+                        }
+                    });
+
                 }, (error) => {
-                    console.error("Firebase 權限遭拒或連線失敗:", error);
-                    enableOfflineMode();
+                    console.error("Firebase 連線被阻擋:", error);
+                    enableOfflineMode("遭阻擋");
                 });
             } catch (e) { 
                 console.error("Firebase 初始化失敗:", e);
-                enableOfflineMode(); 
+                enableOfflineMode("初始化失敗"); 
             }
         }
 
-        function enableOfflineMode() {
-            document.getElementById('sync-text').innerText = '離線模式';
-            document.getElementById('sync-text').className = 'text-amber-700 font-bold';
+        function enableOfflineMode(reason = '') {
+            const syncText = document.getElementById('sync-text');
+            const syncDot = document.getElementById('sync-dot');
+            syncText.innerText = '🔴 離線單機模式' + (reason ? ` (${reason})` : '');
+            syncText.className = 'text-red-600 font-bold';
+            syncDot.className = 'w-2 h-2 rounded-full bg-red-500';
+            syncDot.classList.remove('anim-pulse');
+            
             const saved = localStorage.getItem('classquest_offline_v4');
+            const defaultData = buildInitialData();
+
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    for(let key in parsed) {
-                        if(typeof parsed[key].absent === 'undefined') parsed[key].absent = false;
-                        if(typeof parsed[key].history === 'undefined') parsed[key].history = {};
+                    let needsUpdate = false;
+                    // 同樣進行資料比對，確保 508 班在離線模式也不會遺失
+                    for(let key in defaultData) {
+                        if(!parsed[key]) {
+                            parsed[key] = defaultData[key];
+                            needsUpdate = true;
+                        } else {
+                            if(typeof parsed[key].absent === 'undefined') { parsed[key].absent = false; needsUpdate = true; }
+                            if(typeof parsed[key].history === 'undefined') { parsed[key].history = {}; needsUpdate = true; }
+                            if(typeof parsed[key].group === 'undefined') { parsed[key].group = 0; needsUpdate = true; }
+                            if(typeof parsed[key].todayPts === 'undefined') { parsed[key].todayPts = 0; needsUpdate = true; }
+                        }
                     }
                     state.students = parsed;
-                } catch(e) { state.students = buildInitialData(); }
+                    if(needsUpdate) localStorage.setItem('classquest_offline_v4', JSON.stringify(state.students));
+                } catch(e) { state.students = defaultData; }
             } else {
-                state.students = buildInitialData();
+                state.students = defaultData;
             }
             CQ.renderGrid();
         }
 
         async function syncData(silent = false) {
+            // 不論有無雲端，一定先備份在本地
+            localStorage.setItem('classquest_offline_v4', JSON.stringify(state.students));
+
             if (db && docRef) {
                 try { 
-                    // 寫入到專屬安全的路徑
                     await setDoc(docRef, { students: state.students }, { merge: false }); 
                 } 
                 catch (e) { 
-                    console.error("雲端存檔失敗，轉存本地:", e);
-                    localStorage.setItem('classquest_offline_v4', JSON.stringify(state.students)); 
+                    console.error("雲端存檔失敗:", e);
                 }
-            } else {
-                localStorage.setItem('classquest_offline_v4', JSON.stringify(state.students));
             }
         }
 
