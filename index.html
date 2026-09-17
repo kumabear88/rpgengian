@@ -185,7 +185,7 @@
                     <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2"><span>✏️</span> 名單管理與分組設定</h2>
                     <div class="flex gap-2">
                         <button onclick="CQ.recoverLocalBackup()" class="px-4 py-2 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-lg font-bold text-sm shadow-sm flex items-center gap-1 transition-colors">
-                            🚑 找回本機備份
+                            🚑 深度資料救援
                         </button>
                         <button onclick="CQ.switchView('main')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold text-slate-700 text-sm transition-colors">
                             🔙 返回教室
@@ -528,10 +528,41 @@
         </div>
     </div>
 
+    <!-- 終極資料救援 Modal -->
+    <div id="recovery-modal" class="fixed inset-0 modal-overlay hidden z-[9999] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border-4 border-amber-400 flex flex-col max-h-[90vh]">
+            <div class="p-6 bg-slate-800 text-white text-center relative shrink-0">
+                <button onclick="document.getElementById('recovery-modal').classList.add('hidden')" class="absolute top-4 right-4 w-10 h-10 bg-slate-600 hover:bg-slate-500 rounded-full flex items-center justify-center font-bold text-xl transition-colors">✕</button>
+                <h2 class="text-3xl font-bold flex items-center justify-center gap-2 text-amber-400">🚨 終極資料救援中心</h2>
+                <p class="mt-2 text-slate-300">正在掃描新舊雲端與本機所有可能的角落...</p>
+            </div>
+            
+            <div class="p-6 flex-1 bg-slate-50 overflow-y-auto flex flex-col gap-4">
+                <div class="flex items-center gap-2 text-sm font-bold text-slate-600">
+                    <span id="recovery-status-icon" class="anim-pulse text-xl">⏳</span>
+                    <span id="recovery-status-text">連線至 Firebase 確認舊路徑中...</span>
+                </div>
+                
+                <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 flex-1 flex flex-col">
+                    <h3 class="font-bold text-amber-800 mb-2">📄 找到的最高 XP 紀錄 (紙本純文字檢視)：</h3>
+                    <p class="text-xs text-amber-700 mb-2">您可以直接全選複製下方文字，貼到 Word 或 Excel 當作緊急備份。</p>
+                    <textarea id="recovery-raw-text" class="w-full flex-1 min-h-[300px] bg-white border border-amber-300 rounded-lg p-3 text-sm font-mono text-slate-700 outline-none resize-none" readonly>請稍候，正在撈取資料...</textarea>
+                </div>
+                
+                <div class="flex justify-end gap-3 mt-2">
+                    <button onclick="document.getElementById('recovery-modal').classList.add('hidden')" class="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors">取消關閉</button>
+                    <button id="btn-force-restore" onclick="CQ.forceRestoreData()" class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-colors shadow-md hidden flex items-center gap-2">
+                        <span>📥</span> 點我！將畫面上的資料強制覆蓋回系統
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const fallbackConfig = {
             apiKey: "AIzaSyDBLFK7T2ewIk4qgvlBz9hfQuxEALLUezQ",
@@ -610,6 +641,7 @@
 
         let db = null;
         let docRef = null; // 新增全域變數，鎖定專屬的雲端保險箱路徑
+        let auth = null;   // 新增 auth 全域變數，供救援引擎使用
 
         function buildInitialData() {
             const built = {};
@@ -692,7 +724,7 @@
                 // 1. 取得環境設定
                 const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : fallbackConfig;
                 const app = initializeApp(firebaseConfig);
-                const auth = getAuth(app);
+                auth = getAuth(app);
                 db = getFirestore(app);
                 
                 // 2. 嚴格權限認證 (強制使用動態 Token)
@@ -1335,36 +1367,142 @@
                 link.click();
             },
 
-            recoverLocalBackup: () => {
-                const saved = localStorage.getItem('classquest_offline_v4');
-                if (!saved) {
-                    return CQ.showToast("在您的瀏覽器中找不到先前的本機備份紀錄。", "error");
+            recoverLocalBackup: async () => {
+                const modal = document.getElementById('recovery-modal');
+                const statusText = document.getElementById('recovery-status-text');
+                const statusIcon = document.getElementById('recovery-status-icon');
+                const rawText = document.getElementById('recovery-raw-text');
+                const btnRestore = document.getElementById('btn-force-restore');
+                
+                modal.classList.remove('hidden');
+                btnRestore.classList.add('hidden');
+                rawText.value = "系統啟動，準備進行地毯式掃描...\n";
+                statusIcon.classList.add('anim-pulse');
+                statusIcon.innerText = "⏳";
+                
+                let bestBackup = null;
+                let maxTotalXp = -1;
+
+                // 評估資料的內部函式
+                const evaluateData = (data, sourceName) => {
+                    if(!data) return;
+                    let currentTotalXp = 0;
+                    let valid = false;
+                    for(let id in data) {
+                        if (data[id] && typeof data[id].xp !== 'undefined' && data[id].zh) {
+                            currentTotalXp += data[id].xp || 0;
+                            valid = true;
+                        }
+                    }
+                    if (valid) {
+                        rawText.value += `✔️ 在 [${sourceName}] 找到資料！(包含總計 ${currentTotalXp} XP)\n`;
+                        if (currentTotalXp > maxTotalXp) {
+                            maxTotalXp = currentTotalXp;
+                            bestBackup = data;
+                        }
+                    } else {
+                        rawText.value += `❌ [${sourceName}] 資料格式不符\n`;
+                    }
+                };
+
+                // 1. 掃描本機 LocalStorage
+                statusText.innerText = "步驟 1：掃描電腦本機暫存區...";
+                rawText.value += "\n▶ 開始掃描本機暫存...\n";
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    try {
+                        const saved = localStorage.getItem(key);
+                        if (saved && saved.includes('"xp"') && (saved.includes('"zh"') || saved.includes('"class"'))) {
+                            evaluateData(JSON.parse(saved), `本機暫存檔: ${key}`);
+                        }
+                    } catch (e) {}
                 }
-                try {
-                    const parsed = JSON.parse(saved);
-                    let totalXp = 0;
-                    // 檢查備份是否真的有分數
-                    for(let key in parsed) { 
-                        totalXp += parsed[key].xp || 0; 
-                        // 確保格式相容
-                        if(typeof parsed[key].absent === 'undefined') parsed[key].absent = false;
-                        if(typeof parsed[key].history === 'undefined') parsed[key].history = {};
-                        if(typeof parsed[key].group === 'undefined') parsed[key].group = 0;
-                    }
+
+                // 2. 掃描 Firebase 舊雲端路徑 (終極殺手鐧)
+                if (db) {
+                    statusText.innerText = "步驟 2：連線 Firebase 強制檢索舊版雲端路徑...";
+                    rawText.value += "\n▶ 正在連線 Firebase 舊雲端...\n";
                     
-                    if (totalXp === 0) {
-                        return CQ.showToast("找到備份檔，但裡面是空的 (0 XP)，無須救援。", "error");
-                    }
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                    const oldPaths = [
+                        doc(db, 'classrooms', PUBLIC_ROOM_ID), // 第五版以前的最舊公開根目錄
+                        doc(db, 'artifacts', appId, 'public', 'data', 'classrooms', PUBLIC_ROOM_ID) // 第二種可能的公開路徑
+                    ];
                     
-                    if (confirm(`🚑 發現先前的離線備份檔！\n(總經驗值包含: ${totalXp} XP)\n\n確定要用這份舊資料「覆蓋」目前的雲端紀錄嗎？\n(覆蓋後舊資料就會回到畫面上！)`)) {
-                        state.students = parsed;
-                        syncData(false); // 強制將備份寫入新雲端
-                        CQ.renderEditList();
-                        CQ.showToast("🎉 救援成功！資料已完全恢復並同步至新的雲端空間！");
+                    if (auth && auth.currentUser) {
+                        const userId = auth.currentUser.uid;
+                        oldPaths.push(doc(db, 'artifacts', appId, 'users', userId, 'classrooms', PUBLIC_ROOM_ID)); // 目前的路徑
                     }
-                } catch (e) {
-                    CQ.showToast("備份檔解析失敗，可能已損毀。", "error");
+
+                    for(let i=0; i<oldPaths.length; i++) {
+                        try {
+                            const snap = await getDoc(oldPaths[i]);
+                            if (snap.exists() && snap.data().students) {
+                                evaluateData(snap.data().students, `Firebase 雲端保險箱 ${i+1}`);
+                            } else {
+                                rawText.value += `⚠️ Firebase 保險箱 ${i+1} 內為空。\n`;
+                            }
+                        } catch(e) {
+                            rawText.value += `⚠️ Firebase 保險箱 ${i+1} 讀取被拒絕 (舊版無權限或被清空)。\n`;
+                        }
+                    }
                 }
+
+                // 3. 彙整結果，產生純文字報表 (紙本檢視)
+                rawText.value += "\n掃描結束。正在彙整資料...\n";
+                
+                if (bestBackup && maxTotalXp >= 0) {
+                    statusIcon.innerText = "✅";
+                    statusIcon.classList.remove('anim-pulse');
+                    statusText.innerText = `掃描成功！找到最高紀錄 (全班總計 ${maxTotalXp} XP)。請檢視下方名單確認！`;
+                    statusText.className = "text-green-600 font-bold";
+                    
+                    let reportStr = `========== 🎉 最佳救援資料 (總 XP: ${maxTotalXp}) ==========\n\n`;
+                    const classes = [...new Set(Object.values(bestBackup).map(s => s.class))].sort();
+                    
+                    classes.forEach(cName => {
+                        reportStr += `【 ${cName} 班 】\n`;
+                        const students = Object.values(bestBackup).filter(s => s.class === cName).sort((a,b) => parseInt(a.seat) - parseInt(b.seat));
+                        students.forEach(s => {
+                            // 計算正確等級，每15XP一等
+                            const calculatedLvl = Math.floor(s.xp / 15) + 1;
+                            reportStr += `座號 ${s.seat}  ${s.zh.padEnd(4, ' ')} :  ${s.xp} XP  (Lv.${calculatedLvl})\n`;
+                        });
+                        reportStr += `\n`;
+                    });
+                    
+                    rawText.value = reportStr;
+                    btnRestore.classList.remove('hidden');
+                    
+                    // 將最佳備份暫存到全域，等按下還原時使用
+                    window._pendingRecoveryData = bestBackup;
+                } else {
+                    statusIcon.innerText = "❌";
+                    statusIcon.classList.remove('anim-pulse');
+                    statusText.innerText = "掃描完畢，找不到任何含有 XP 的舊資料。";
+                    statusText.className = "text-red-500 font-bold";
+                    rawText.value += "\n很遺憾，新舊雲端與本機皆無發現殘留分數紀錄。可能今天早上並非使用這台電腦，或是紀錄已經徹底被清除。";
+                }
+            },
+            
+            forceRestoreData: () => {
+                const data = window._pendingRecoveryData;
+                if (!data) return;
+                
+                // 修補舊版資料可能缺少的欄位，避免系統崩潰
+                for(let key in data) { 
+                    if(typeof data[key].absent === 'undefined') data[key].absent = false;
+                    if(typeof data[key].history === 'undefined') data[key].history = {};
+                    if(typeof data[key].group === 'undefined') data[key].group = 0;
+                    if(typeof data[key].todayPts === 'undefined') data[key].todayPts = 0;
+                }
+                
+                state.students = data;
+                syncData(false); // 將找到的心血，強制儲存到現在最新且安全的雲端！
+                CQ.renderEditList();
+                CQ.renderGrid();
+                document.getElementById('recovery-modal').classList.add('hidden');
+                CQ.showToast("🎉 救援覆蓋成功！過去辛苦加分的紀錄已完全恢復並上傳至安全雲端！");
             }
         };
 
