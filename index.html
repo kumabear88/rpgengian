@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,22 +8,15 @@
     <style>
         body { font-family: 'Comic Sans MS', 'Microsoft JhengHei', sans-serif; background-color: #f8fafc; overflow-x: hidden; }
         
-        @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
-            70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-        }
+        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); } 70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
         @keyframes bounce-sm { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         @keyframes float-up { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.5); } }
-        @keyframes screen-shake {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            10%, 30%, 50%, 70%, 90% { transform: translate(-3px, -2px) rotate(-1deg); }
-            20%, 40%, 60%, 80% { transform: translate(3px, 2px) rotate(1deg); }
-        }
-        @keyframes spin-slow { 100% { transform: rotate(360deg); } }
-
+        @keyframes screen-shake { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 10%, 30%, 50%, 70%, 90% { transform: translate(-3px, -2px) rotate(-1deg); } 20%, 40%, 60%, 80% { transform: translate(3px, 2px) rotate(1deg); } }
+        @keyframes shake-box { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-10deg) scale(1.1); } 50% { transform: rotate(10deg) scale(1.1); } 75% { transform: rotate(-10deg) scale(1.1); } }
+        
         .anim-pulse { animation: pulse-ring 2s infinite; }
         .anim-bounce { animation: bounce-sm 1s ease-in-out infinite; }
+        .anim-shake-box { animation: shake-box 0.5s ease-in-out infinite; }
         .floating-text { position: absolute; font-weight: bold; font-size: 2.5rem; pointer-events: none; animation: float-up 1s ease-out forwards; z-index: 9999; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .shake-screen { animation: screen-shake 0.4s ease-in-out; }
         
@@ -32,8 +25,8 @@
 
         .student-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 3px solid transparent; }
         .student-card:hover:not(.absent) { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #93c5fd; }
-        .student-card.selected:not(.absent) { border-color: #3b82f6; transform: scale(1.05); box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.3); z-index: 10; }
-        .student-card.absent { opacity: 0.4; filter: grayscale(50%); cursor: not-allowed; }
+        .student-card.selected { border-color: #3b82f6; transform: scale(1.05); box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.3); z-index: 10; }
+        .student-card.absent { opacity: 0.45; filter: grayscale(80%); }
         
         .class-bg-hero { background: linear-gradient(135deg, #fecaca 0%, #fee2e2 100%); }
         .class-bg-magician { background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%); }
@@ -54,12 +47,6 @@
         .editable-name { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2px; cursor: pointer; transition: 0.2s; }
         .editable-name:hover { border-color: #3b82f6; color: #1e40af; background: #eff6ff; border-radius: 4px; padding: 0 4px; }
         .name-input { background: #fff; border: 2px solid #3b82f6; border-radius: 6px; padding: 2px 8px; font-size: inherit; font-weight: inherit; outline: none; width: 150px; text-align: center; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1); }
-
-        .evolution-grid { display: grid; grid-template-columns: 80px repeat(5, 1fr); gap: 8px; align-items: center; text-align: center; }
-        .evo-cell { padding: 8px 4px; background: #fff; border-radius: 8px; border: 1px solid #e2e8f0; }
-        .evo-header { font-size: 0.75rem; font-weight: bold; color: #64748b; background: #f8fafc; border: none; }
-        .evo-title { font-weight: bold; font-size: 0.85rem; color: #334155; text-align: right; padding-right: 8px; }
-        
         .group-btn.active { background-color: #9333ea; color: white; border-color: #7e22ce; transform: scale(1.05); }
     </style>
 </head>
@@ -78,10 +65,13 @@
                     </div>
                 </div>
                 <div class="flex gap-2 items-center">
-                    <div id="sync-status" class="hidden sm:flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-full text-xs font-bold text-slate-500 border border-slate-200">
+                    <div id="sync-status" onclick="CQ.forceReconnect()" class="cursor-pointer hidden sm:flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-full text-xs font-bold text-slate-500 border border-slate-200 hover:bg-slate-200 transition-colors shadow-sm" title="點擊嘗試重新連線至資料庫">
                         <span class="w-2 h-2 rounded-full bg-amber-500" id="sync-dot"></span>
                         <span id="sync-text">系統連線中...</span>
                     </div>
+                    <button onclick="CQ.exportTodayCSV()" class="px-4 py-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg font-bold text-sm transition-colors flex items-center gap-1 shadow-sm border border-emerald-200">
+                        <span>💾</span> <span class="hidden md:inline">匯出今日</span>
+                    </button>
                     <button onclick="CQ.showRules()" class="px-4 py-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded-lg font-bold text-sm transition-colors flex items-center gap-1 shadow-sm">
                         <span>📖</span> <span class="hidden sm:inline">遊戲規則</span>
                     </button>
@@ -92,7 +82,7 @@
                         <span>✏️</span> <span class="hidden sm:inline">編輯名單</span>
                     </button>
                     <button onclick="CQ.openRecovery()" class="px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg font-bold text-sm transition-colors flex items-center gap-1 shadow-sm border border-red-300">
-                        <span>🚑</span> <span class="hidden sm:inline">緊急救援</span>
+                        <span>🚑</span> <span class="hidden lg:inline">緊急救援</span>
                     </button>
                 </div>
             </div>
@@ -101,8 +91,8 @@
         <main id="view-main" class="max-w-[95%] xl:max-w-7xl mx-auto px-4 py-6">
             <div class="flex flex-wrap gap-4 justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 relative">
                 <div class="absolute -bottom-3 -right-3 bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-lg border-2 border-white transform rotate-[-5deg] z-20">
-                    <div class="flex items-center gap-1"><span>📌</span> 雙軌升級模式</div>
-                    <div class="text-[10px] opacity-90 mt-0.5">每 15XP 升一級！</div>
+                    <div class="flex items-center gap-1"><span>📌</span> 升級改版！</div>
+                    <div class="text-[10px] opacity-90 mt-0.5">每 30XP 升一級並抽獎！</div>
                 </div>
 
                 <div class="flex items-center gap-3">
@@ -113,10 +103,10 @@
                 
                 <div class="flex flex-wrap gap-2">
                     <button onclick="CQ.openTimer()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl shadow-sm transition-transform active:scale-95 flex items-center gap-2 text-lg">
-                        <span>⏱️</span> 倒數計時
+                        <span>⏱️</span> <span class="hidden sm:inline">倒數計時</span>
                     </button>
                     <button onclick="CQ.openWheel()" class="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl shadow-sm transition-transform active:scale-95 flex items-center gap-2 text-lg">
-                        <span>🎡</span> 抽人轉盤
+                        <span>🎡</span> <span class="hidden sm:inline">抽人轉盤</span>
                     </button>
                     
                     <div class="w-px h-8 bg-slate-300 mx-2 self-center hidden md:block"></div>
@@ -198,8 +188,11 @@
                 <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
                     <h2 class="text-2xl font-bold text-indigo-800 flex items-center gap-2"><span>📊</span> 課堂歷史報表 (Report)</h2>
                     <div class="flex gap-2">
-                        <button onclick="CQ.exportCSV()" class="px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg font-bold text-sm flex items-center gap-1">
-                            <span>📥</span> 匯出成 Excel
+                        <button onclick="CQ.exportTodayCSV()" class="px-4 py-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg font-bold text-sm flex items-center gap-1 shadow-sm">
+                            <span>💾</span> 匯出今日全部
+                        </button>
+                        <button onclick="CQ.exportCSV()" class="px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg font-bold text-sm flex items-center gap-1 shadow-sm">
+                            <span>📥</span> 匯出目前畫面
                         </button>
                         <button onclick="CQ.switchView('main')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold text-slate-700">🔙 返回教室</button>
                     </div>
@@ -234,6 +227,7 @@
         </main>
     </div>
 
+    <!-- 🌟 單人加扣分彈出視窗 🌟 -->
     <div id="student-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-3xl overflow-hidden modal-content shadow-2xl border-4 border-white flex flex-col max-h-[95vh]">
             <div id="modal-header" class="p-6 relative text-center shrink-0">
@@ -242,7 +236,8 @@
                 <h2 class="text-4xl font-bold text-slate-800 mb-2 flex items-center justify-center gap-3">
                     <span id="modal-en-name" class="editable-name" onclick="CQ.editEnNameInModal()"></span>
                     <input type="text" id="modal-en-input" class="hidden name-input text-2xl" onblur="CQ.saveEnNameFromModal()" onkeypress="if(event.key==='Enter') CQ.saveEnNameFromModal()">
-                    <span id="modal-zh-name" class="text-2xl text-slate-600 font-normal"></span>
+                    <span id="modal-zh-name" class="text-3xl text-slate-800 font-black ml-2"></span>
+                    <span id="modal-prize-icon" class="text-3xl"></span>
                 </h2>
                 <div class="inline-flex items-center gap-3 px-6 py-2 bg-white/80 backdrop-blur rounded-full text-slate-800 font-bold text-lg shadow-sm mt-1">
                     <span id="modal-seat-info">Seat --</span> | 
@@ -283,19 +278,19 @@
                             <span class="font-bold text-green-700 tracking-wide text-lg">加分項目 (POSITIVE)</span>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <button onclick="CQ.awardPoint(1, 'Good Answer')" class="bg-white p-4 rounded-xl border-2 border-green-100 hover:border-green-400 hover:bg-green-50 transition-all text-center group shadow-sm">
+                            <button onclick="CQ.awardPoint(1, '好回答')" class="bg-white p-4 rounded-xl border-2 border-green-100 hover:border-green-400 hover:bg-green-50 transition-all text-center group shadow-sm">
                                 <div class="w-14 h-14 mx-auto bg-green-100 rounded-full flex items-center justify-center text-2xl text-green-600 mb-3 group-hover:scale-110 transition-transform">💬</div>
                                 <div class="font-bold text-slate-700 text-base">好回答</div><div class="text-sm font-black text-green-600 mt-1">+1 XP</div>
                             </button>
-                            <button onclick="CQ.awardPoint(1, 'Teamwork')" class="bg-white p-4 rounded-xl border-2 border-teal-100 hover:border-teal-400 hover:bg-teal-50 transition-all text-center group shadow-sm">
+                            <button onclick="CQ.awardPoint(1, '團隊合作')" class="bg-white p-4 rounded-xl border-2 border-teal-100 hover:border-teal-400 hover:bg-teal-50 transition-all text-center group shadow-sm">
                                 <div class="w-14 h-14 mx-auto bg-teal-100 rounded-full flex items-center justify-center text-2xl text-teal-600 mb-3 group-hover:scale-110 transition-transform">🤝</div>
                                 <div class="font-bold text-slate-700 text-base">團隊合作</div><div class="text-sm font-black text-teal-600 mt-1">+1 XP</div>
                             </button>
-                            <button onclick="CQ.awardPoint(2, 'English Only')" class="bg-white p-4 rounded-xl border-2 border-emerald-100 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-center group shadow-sm">
+                            <button onclick="CQ.awardPoint(2, '說英文')" class="bg-white p-4 rounded-xl border-2 border-emerald-100 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-center group shadow-sm">
                                 <div class="w-14 h-14 mx-auto bg-emerald-100 rounded-full flex items-center justify-center text-2xl text-emerald-600 mb-3 group-hover:scale-110 transition-transform">🗣️</div>
                                 <div class="font-bold text-slate-700 text-base">說英文</div><div class="text-sm font-black text-emerald-600 mt-1">+2 XP</div>
                             </button>
-                            <button onclick="CQ.awardPoint(3, 'Perfect!')" class="bg-white p-4 rounded-xl border-2 border-yellow-200 hover:border-yellow-400 hover:bg-yellow-50 transition-all text-center group shadow-md anim-pulse">
+                            <button onclick="CQ.awardPoint(3, '完美表現')" class="bg-white p-4 rounded-xl border-2 border-yellow-200 hover:border-yellow-400 hover:bg-yellow-50 transition-all text-center group shadow-md anim-pulse">
                                 <div class="w-14 h-14 mx-auto bg-yellow-100 rounded-full flex items-center justify-center text-2xl text-yellow-600 mb-3 group-hover:scale-110 transition-transform">⭐</div>
                                 <div class="font-bold text-amber-700 text-base">完美表現</div><div class="text-sm font-black text-yellow-600 mt-1">+3 XP</div>
                             </button>
@@ -308,19 +303,19 @@
                             <span class="font-bold text-red-500 tracking-wide text-lg">扣分項目 (NEEDS WORK)</span>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <button onclick="CQ.deductPoint(-1, 'Off Task')" class="bg-white p-3 rounded-xl border-2 border-red-50 hover:border-red-300 hover:bg-red-50 transition-all text-center group">
+                            <button onclick="CQ.deductPoint(-1, '發呆分心')" class="bg-white p-3 rounded-xl border-2 border-red-50 hover:border-red-300 hover:bg-red-50 transition-all text-center group">
                                 <div class="w-10 h-10 mx-auto bg-slate-100 rounded-full flex items-center justify-center text-xl text-slate-400 mb-2 group-hover:text-red-500 transition-colors">👻</div>
                                 <div class="font-bold text-slate-600 text-sm">發呆分心</div><div class="text-xs font-bold text-red-400 mt-1">-1 XP</div>
                             </button>
-                            <button onclick="CQ.deductPoint(-1, 'Chinese')" class="bg-white p-3 rounded-xl border-2 border-red-50 hover:border-red-300 hover:bg-red-50 transition-all text-center group">
+                            <button onclick="CQ.deductPoint(-1, '講中文')" class="bg-white p-3 rounded-xl border-2 border-red-50 hover:border-red-300 hover:bg-red-50 transition-all text-center group">
                                 <div class="w-10 h-10 mx-auto bg-slate-100 rounded-full flex items-center justify-center text-xl text-slate-400 mb-2 group-hover:text-red-500 transition-colors">🙊</div>
                                 <div class="font-bold text-slate-600 text-sm">講中文</div><div class="text-xs font-bold text-red-400 mt-1">-1 XP</div>
                             </button>
-                            <button onclick="CQ.deductPoint(-1, 'Disruptive')" class="bg-white p-3 rounded-xl border-2 border-red-50 hover:border-red-300 hover:bg-red-50 transition-all text-center group">
+                            <button onclick="CQ.deductPoint(-1, '干擾上課')" class="bg-white p-3 rounded-xl border-2 border-red-50 hover:border-red-300 hover:bg-red-50 transition-all text-center group">
                                 <div class="w-10 h-10 mx-auto bg-slate-100 rounded-full flex items-center justify-center text-xl text-slate-400 mb-2 group-hover:text-red-500 transition-colors">⚡</div>
                                 <div class="font-bold text-slate-600 text-sm">干擾上課</div><div class="text-xs font-bold text-red-400 mt-1">-1 XP</div>
                             </button>
-                            <button onclick="CQ.deductPoint(-2, 'Unprepared')" class="bg-white p-3 rounded-xl border-2 border-red-50 hover:border-red-300 hover:bg-red-50 transition-all text-center group">
+                            <button onclick="CQ.deductPoint(-2, '未帶學用品')" class="bg-white p-3 rounded-xl border-2 border-red-50 hover:border-red-300 hover:bg-red-50 transition-all text-center group">
                                 <div class="w-10 h-10 mx-auto bg-slate-100 rounded-full flex items-center justify-center text-xl text-slate-400 mb-2 group-hover:text-red-500 transition-colors">🎒</div>
                                 <div class="font-bold text-slate-600 text-sm">未帶學用品</div><div class="text-xs font-bold text-red-400 mt-1">-2 XP</div>
                             </button>
@@ -344,6 +339,7 @@
         </div>
     </div>
 
+    <!-- 🌟 多選加分視窗 🌟 -->
     <div id="multi-award-modal" class="fixed inset-0 modal-overlay hidden z-[60] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden modal-content shadow-2xl border-4 border-white flex flex-col">
             <div class="p-6 bg-blue-600 text-white text-center relative">
@@ -353,16 +349,16 @@
             </div>
             <div class="p-6 bg-slate-50">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <button onclick="CQ.awardPoint(1, 'Good Answer')" class="bg-white p-4 rounded-xl border-2 border-green-100 hover:border-green-400 hover:bg-green-50 transition-all text-center shadow-sm">
+                    <button onclick="CQ.awardPoint(1, '好回答')" class="bg-white p-4 rounded-xl border-2 border-green-100 hover:border-green-400 hover:bg-green-50 transition-all text-center shadow-sm">
                         <div class="text-3xl mb-2">💬</div><div class="font-bold text-slate-700">全體 +1</div>
                     </button>
-                    <button onclick="CQ.awardPoint(1, 'Teamwork')" class="bg-white p-4 rounded-xl border-2 border-teal-100 hover:border-teal-400 hover:bg-teal-50 transition-all text-center shadow-sm">
+                    <button onclick="CQ.awardPoint(1, '團隊合作')" class="bg-white p-4 rounded-xl border-2 border-teal-100 hover:border-teal-400 hover:bg-teal-50 transition-all text-center shadow-sm">
                         <div class="text-3xl mb-2">🤝</div><div class="font-bold text-slate-700">全體 +1</div>
                     </button>
-                    <button onclick="CQ.awardPoint(2, 'English Only')" class="bg-white p-4 rounded-xl border-2 border-emerald-100 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-center shadow-sm">
+                    <button onclick="CQ.awardPoint(2, '說英文')" class="bg-white p-4 rounded-xl border-2 border-emerald-100 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-center shadow-sm">
                         <div class="text-3xl mb-2">🗣️</div><div class="font-bold text-slate-700">全體 +2</div>
                     </button>
-                    <button onclick="CQ.awardPoint(3, 'Perfect!')" class="bg-white p-4 rounded-xl border-2 border-yellow-200 hover:border-yellow-400 hover:bg-yellow-50 transition-all text-center shadow-md anim-pulse">
+                    <button onclick="CQ.awardPoint(3, '完美表現')" class="bg-white p-4 rounded-xl border-2 border-yellow-200 hover:border-yellow-400 hover:bg-yellow-50 transition-all text-center shadow-md anim-pulse">
                         <div class="text-3xl mb-2">⭐</div><div class="font-bold text-amber-700">全體 +3</div>
                     </button>
                 </div>
@@ -376,6 +372,7 @@
         </div>
     </div>
 
+    <!-- 🌟 小組加分視窗 🌟 -->
     <div id="group-award-modal" class="fixed inset-0 modal-overlay hidden z-[60] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-3xl overflow-hidden modal-content shadow-2xl border-4 border-white flex flex-col">
             <div class="p-6 bg-purple-600 text-white text-center relative">
@@ -390,16 +387,16 @@
                 </div>
                 <div class="border-t border-slate-200 pt-6">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <button onclick="CQ.awardGroupPoint(1, 'Good Answer')" class="bg-white p-4 rounded-xl border-2 border-green-100 hover:border-green-400 hover:bg-green-50 transition-all text-center shadow-sm">
+                        <button onclick="CQ.awardGroupPoint(1, '好回答')" class="bg-white p-4 rounded-xl border-2 border-green-100 hover:border-green-400 hover:bg-green-50 transition-all text-center shadow-sm">
                             <div class="text-3xl mb-2">💬</div><div class="font-bold text-slate-700">全組 +1</div>
                         </button>
-                        <button onclick="CQ.awardGroupPoint(1, 'Teamwork')" class="bg-white p-4 rounded-xl border-2 border-teal-100 hover:border-teal-400 hover:bg-teal-50 transition-all text-center shadow-sm">
+                        <button onclick="CQ.awardGroupPoint(1, '團隊合作')" class="bg-white p-4 rounded-xl border-2 border-teal-100 hover:border-teal-400 hover:bg-teal-50 transition-all text-center shadow-sm">
                             <div class="text-3xl mb-2">🤝</div><div class="font-bold text-slate-700">全組 +1</div>
                         </button>
-                        <button onclick="CQ.awardGroupPoint(2, 'English Only')" class="bg-white p-4 rounded-xl border-2 border-emerald-100 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-center shadow-sm">
+                        <button onclick="CQ.awardGroupPoint(2, '說英文')" class="bg-white p-4 rounded-xl border-2 border-emerald-100 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-center shadow-sm">
                             <div class="text-3xl mb-2">🗣️</div><div class="font-bold text-slate-700">全組 +2</div>
                         </button>
-                        <button onclick="CQ.awardGroupPoint(3, 'Perfect!')" class="bg-white p-4 rounded-xl border-2 border-yellow-200 hover:border-yellow-400 hover:bg-yellow-50 transition-all text-center shadow-md anim-pulse">
+                        <button onclick="CQ.awardGroupPoint(3, '完美表現')" class="bg-white p-4 rounded-xl border-2 border-yellow-200 hover:border-yellow-400 hover:bg-yellow-50 transition-all text-center shadow-md anim-pulse">
                             <div class="text-3xl mb-2">⭐</div><div class="font-bold text-amber-700">全組 +3</div>
                         </button>
                     </div>
@@ -414,6 +411,31 @@
         </div>
     </div>
 
+    <!-- 🌟 升級寶箱抽獎視窗 🌟 -->
+    <div id="lottery-modal" class="fixed inset-0 modal-overlay hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-slate-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border-4 border-yellow-400 flex flex-col items-center p-8 text-center relative">
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30"></div>
+            <h2 class="text-3xl font-black text-yellow-400 mb-2 relative z-10" id="lottery-title">🎉 恭喜升級！</h2>
+            <p class="text-white text-lg font-bold mb-8 relative z-10" id="lottery-subtitle">獲得了一次開啟幸運寶箱的機會！</p>
+            
+            <div id="lottery-box" class="relative z-10">
+                <div class="text-9xl anim-shake-box cursor-pointer drop-shadow-2xl hover:scale-110 transition-transform" onclick="CQ.rollLottery()">🎁</div>
+                <p class="text-yellow-300 font-bold mt-4 anim-pulse">點擊寶箱開啟！</p>
+            </div>
+
+            <div id="lottery-result" class="hidden relative z-10 flex flex-col items-center w-full">
+                <div class="text-8xl mb-4">🎊</div>
+                <div class="bg-white/10 p-6 rounded-2xl border border-white/20 w-full mb-6">
+                    <p class="text-slate-300 text-sm font-bold mb-2">隨機獎勵</p>
+                    <p id="lottery-result-text" class="text-2xl font-black text-white tracking-wider"></p>
+                    <div id="lottery-result-name" class="mt-4 text-4xl font-black bg-white px-6 py-3 rounded-xl shadow-inner inline-block">名字展示</div>
+                </div>
+                <button onclick="CQ.closeLottery()" class="px-8 py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-black rounded-xl text-xl w-full shadow-lg transition-transform active:scale-95">太棒了！繼續</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🌟 抽籤轉盤視窗 🌟 -->
     <div id="wheel-modal" class="fixed inset-0 modal-overlay hidden z-[70] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border-8 border-pink-400 flex flex-col items-center">
             <div class="w-full p-6 bg-pink-500 text-white text-center relative">
@@ -445,8 +467,9 @@
         </div>
     </div>
 
+    <!-- 🌟 計時器視窗 🌟 -->
     <div id="timer-modal" class="fixed inset-0 modal-overlay hidden z-[70] flex items-center justify-center p-4">
-        <div class="bg-slate-900 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border-4 border-slate-700 flex flex-col items-center p-12">
+        <div class="bg-slate-900 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border-4 border-slate-700 flex flex-col items-center p-12 relative">
             <button onclick="CQ.closeTimer()" class="absolute top-8 right-8 w-16 h-16 bg-slate-800 hover:bg-slate-700 rounded-full text-3xl text-white font-black flex items-center justify-center transition-colors">✕</button>
             <h2 class="text-3xl font-bold text-slate-400 mb-8 tracking-widest">CLASS TIMER</h2>
             
@@ -461,35 +484,37 @@
                 <button onclick="CQ.resetTimer()" class="px-6 py-3 bg-slate-800 hover:bg-red-900/50 text-red-400 font-bold rounded-xl text-2xl border border-slate-600">重設</button>
             </div>
             
-            <div class="flex gap-6 w-full max-w-lg">
-                <button id="btn-timer-toggle" onclick="CQ.toggleTimer()" class="flex-1 py-6 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl text-4xl shadow-[0_0_20px_rgba(37,99,235,0.5)] transition-transform active:scale-95">
+            <div class="flex w-full max-w-lg">
+                <button id="btn-timer-toggle" onclick="CQ.toggleTimer()" class="w-full py-6 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl text-4xl shadow-[0_0_20px_rgba(37,99,235,0.5)] transition-transform active:scale-95">
                     ▶ 開始
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- 🌟 緊急救援 CSV 匯入視窗 🌟 -->
     <div id="recovery-modal" class="fixed inset-0 modal-overlay hidden z-[999] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border-8 border-red-500 flex flex-col max-h-[90vh]">
             <div class="p-6 bg-red-600 text-white text-center relative shrink-0">
                 <button onclick="CQ.closeRecovery()" class="absolute top-4 right-4 w-12 h-12 bg-red-800/50 hover:bg-red-800 rounded-full text-2xl font-bold flex items-center justify-center transition-colors">✕</button>
-                <h2 class="text-3xl font-bold flex items-center justify-center gap-2">🚨 終極資料強制打撈中心</h2>
-                <p class="mt-2 text-red-100 font-bold">掃描本機記憶體與舊版備份，找回遺失資料！</p>
+                <h2 class="text-3xl font-bold flex items-center justify-center gap-2">🚨 終極資料強制還原中心</h2>
+                <p class="mt-2 text-red-100 font-bold">從您下載的 CSV 成績表還原所有學生的 XP、職業與分組！</p>
             </div>
             <div class="p-6 flex flex-col bg-red-50 flex-1 overflow-y-auto">
-                <button onclick="CQ.scanLocalStorage()" class="w-full py-5 bg-red-500 hover:bg-red-600 text-white font-black rounded-xl text-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-3 mb-4">
-                    🔍 點我！立即深度掃描本機遺留資料
-                </button>
-                <div id="recovery-log" class="bg-slate-900 text-green-400 font-mono p-4 rounded-xl min-h-[250px] text-base whitespace-pre-wrap overflow-auto shadow-inner border border-slate-700">等待指示中... 點擊上方按鈕開始掃描。</div>
-                <div id="recovery-actions" class="mt-6 hidden">
-                    <button onclick="CQ.forceRestoreData()" class="w-full py-5 bg-green-600 hover:bg-green-700 text-white font-black rounded-xl text-3xl shadow-xl transition-transform active:scale-95 flex items-center justify-center gap-3 animate-bounce">
-                        📥 將找到的資料強制覆蓋回系統！
+                <div class="bg-white p-6 rounded-2xl border border-red-200 shadow-sm mb-6">
+                    <h3 class="text-xl font-bold text-red-700 mb-4">步驟 1：選擇 CSV 檔案匯入</h3>
+                    <input type="file" id="csv-file-input" accept=".csv" multiple class="hidden" onchange="CQ.handleCSVImport(event)">
+                    <button onclick="document.getElementById('csv-file-input').click()" class="w-full py-5 bg-red-500 hover:bg-red-600 text-white font-black rounded-xl text-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-3">
+                        📄 點我！選取並匯入 CSV 成績表
                     </button>
+                    <p class="text-sm text-slate-500 mt-3 text-center">支援多選檔案。匯入後將覆蓋目前的學生分數與設定。</p>
                 </div>
+                <div id="recovery-log" class="bg-slate-900 text-green-400 font-mono p-4 rounded-xl min-h-[250px] text-base whitespace-pre-wrap overflow-auto shadow-inner border border-slate-700">系統準備就緒，等待 CSV 檔案匯入...</div>
             </div>
         </div>
     </div>
 
+    <!-- 🌟 確認對話框 🌟 -->
     <div id="confirm-modal" class="fixed inset-0 modal-overlay hidden z-[9999] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl text-center border-4 border-slate-200">
             <div class="text-6xl mb-4">⚠️</div>
@@ -501,6 +526,7 @@
         </div>
     </div>
 
+    <!-- 🌟 遊戲規則與進化表 🌟 -->
     <div id="rules-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-4xl overflow-hidden modal-content shadow-2xl flex flex-col max-h-[90vh]">
             <div class="bg-indigo-600 p-6 relative text-center text-white shrink-0">
@@ -509,10 +535,11 @@
             </div>
             <div class="p-6 overflow-y-auto flex-1 bg-slate-50">
                 <div class="mb-6 p-6 bg-blue-50 rounded-2xl border border-blue-100 text-blue-800">
-                    <h3 class="font-bold mb-4 flex items-center gap-2 text-2xl"><span>🎯</span> 雙軌升級機制</h3>
+                    <h3 class="font-bold mb-4 flex items-center gap-2 text-2xl"><span>🎯</span> 升級機制與抽獎</h3>
                     <ul class="list-disc pl-6 space-y-3 text-lg font-bold">
-                        <li><strong>等級 (Level)：</strong>每累積 <strong class="text-blue-600">15 XP</strong> 即可無上限提升 1 個等級。</li>
+                        <li><strong>等級 (Level)：</strong>每累積 <strong class="text-blue-600">30 XP</strong> 即可無上限提升 1 個等級！</li>
                         <li><strong>階級 (Rank)：</strong>隨著 Level 提升，職業圖示會進化！(Lv.1, Lv.5, Lv.10, Lv.15, Lv.20 階段進化)</li>
+                        <li><strong>幸運抽獎 🎁：</strong>每次升級都會觸發開寶箱，隨機獲得「專屬名字顏色」或「超炫稀有圖示」！</li>
                         <li class="text-red-500">注意：發呆、講中文、沒帶課本會被扣除 XP！</li>
                     </ul>
                 </div>
@@ -529,41 +556,65 @@
             apiKey: "AIzaSyDBLFK7T2ewIk4qgvlBz9hfQuxEALLUezQ",
             authDomain: "typing-game-755a8.firebaseapp.com",
             databaseURL: "https://typing-game-755a8-default-rtdb.firebaseio.com",
-            projectId: "typing-game-755a8",
-            storageBucket: "typing-game-755a8.firebasestorage.app",
-            messagingSenderId: "938096537906",
-            appId: "1:938096537906:web:0fb0e431a9fcbb2fcb272b",
-            measurementId: "G-K8NC1SX4X6"
+            projectId: "typing-game-755a8"
         };
         
-        // CRITICAL FIX: Reverting to v4 room ID to retrieve lost grouping/score data
-        const PUBLIC_ROOM_ID = 'yian-class-rpg-v4'; 
+        const PUBLIC_ROOM_ID = 'yian-class-rpg-v11-complete'; 
 
+        // 🌟 預先載入 506、507、508 真實數據！
         const rawRosters = {
             "506": [
-                { s:"01", c:"廖芃宇" }, { s:"02", c:"蕭聿辰" }, { s:"03", c:"張誠祐" }, { s:"04", c:"彭秉宥" }, { s:"05", c:"姜天穎" },
-                { s:"06", c:"王以謙" }, { s:"07", c:"玲宸希" }, { s:"08", c:"陳海睿" }, { s:"09", c:"詹濱元" }, { s:"10", c:"羅承恩" },
-                { s:"11", c:"陳宥崴" }, { s:"12", c:"莊沛謙" }, { s:"13", c:"王浤宇" }, { s:"14", c:"陳澔民" }, { s:"15", c:"張名維" },
-                { s:"16", c:"葉書榮" }, { s:"17", c:"張美琰" }, { s:"18", c:"李芷嫻" }, { s:"19", c:"闕米菲" }, { s:"20", c:"蕭品吟" },
-                { s:"21", c:"陳莉雅" }, { s:"22", c:"黃家榆" }, { s:"23", c:"華晨希" }, { s:"24", c:"周瑾緗" }, { s:"25", c:"簡愷螢" },
-                { s:"26", c:"陳宥彤" }, { s:"27", c:"郭語恩" }, { s:"28", c:"楊羽晴" }, { s:"29", c:"楊采翎" }, { s:"30", c:"陳品璇" }
+                { s:"01", c:"廖芃宇", e:"Eason", j:"hero", xp:4 }, { s:"02", c:"蕭聿辰", e:"Jack", j:"hunter", xp:1 },
+                { s:"03", c:"張誠祐", e:"Jerry", j:"hunter", xp:1 }, { s:"04", c:"彭秉宥", e:"Nicky", j:"hunter", xp:3 },
+                { s:"05", c:"姜天穎", e:"Timothy", j:"hunter", xp:5 }, { s:"06", c:"王以謙", e:"Kirby", j:"hunter", xp:3 },
+                { s:"07", c:"玲宸希", e:"Boka", j:"beast", xp:1 }, { s:"08", c:"陳海睿", e:"Harley", j:"royal", xp:4 },
+                { s:"09", c:"詹濱元", e:"Jonas", j:"magician", xp:3 }, { s:"10", c:"羅承恩", e:"Abner", j:"magician", xp:1 },
+                { s:"11", c:"陳宥崴", e:"Aiden", j:"hunter", xp:1 }, { s:"12", c:"莊沛謙", e:"Ken", j:"hero", xp:1 },
+                { s:"13", c:"王浤宇", e:"Lucas", j:"hunter", xp:1 }, { s:"14", c:"陳澔民", e:"Jack", j:"magician", xp:1 },
+                { s:"15", c:"張名維", e:"Wan", j:"hunter", xp:1 }, { s:"16", c:"葉書榮", e:"Ryan", j:"hero", xp:1 },
+                { s:"17", c:"張美琰", e:"", j:"none", xp:0 }, { s:"18", c:"李芷嫻", e:"Nora", j:"hunter", xp:5 },
+                { s:"19", c:"闕米菲", e:"Miffy", j:"magician", xp:2 }, { s:"20", c:"蕭品吟", e:"Sherry", j:"royal", xp:1 },
+                { s:"21", c:"陳莉雅", e:"Leia", j:"beast", xp:4 }, { s:"22", c:"黃家榆", e:"Jia", j:"magician", xp:5 },
+                { s:"23", c:"華晨希", e:"Emily", j:"magician", xp:2 }, { s:"24", c:"周瑾緗", e:"Emma", j:"magician", xp:1 },
+                { s:"25", c:"簡愷螢", e:"Kelly", j:"magician", xp:1 }, { s:"26", c:"陳宥彤", e:"Truda", j:"beast", xp:1 },
+                { s:"27", c:"郭語恩", e:"Yui", j:"magician", xp:6 }, { s:"28", c:"楊羽晴", e:"Sunny", j:"magician", xp:4 },
+                { s:"29", c:"楊采翎", e:"Linda", j:"beast", xp:2 }, { s:"30", c:"陳品璇", e:"Lena", j:"beast", xp:1 },
+                { s:"31", c:"測試", e:"test", j:"magician", xp:3 }
             ],
             "507": [
-                { s:"01", c:"姜宥庭" }, { s:"02", c:"蔡承叡" }, { s:"03", c:"蘇之榮" }, { s:"04", c:"林家正" }, { s:"05", c:"楊牧" },
-                { s:"06", c:"李語桐" }, { s:"07", c:"黃宇宸" }, { s:"08", c:"游允樂" }, { s:"09", c:"葉庭宇" }, { s:"10", c:"馬琮越" },
-                { s:"11", c:"陳卓均" }, { s:"12", c:"黃品睿" }, { s:"13", c:"陳奕維" }, { s:"14", c:"許柏誠" }, { s:"15", c:"黃泓邁" },
-                { s:"16", c:"陳奕呈" }, { s:"17", c:"林琬翎" }, { s:"18", c:"林孟璇" }, { s:"19", c:"黃柔瑜" }, { s:"20", c:"吳恩柔" },
-                { s:"21", c:"黃若芸" }, { s:"22", c:"張瑋芯" }, { s:"23", c:"陳芊默" }, { s:"24", c:"王常曦" }, { s:"25", c:"郭采辰" },
-                { s:"26", c:"郭采一" }, { s:"27", c:"黃歆茹" }, { s:"28", c:"徐子晴" }, { s:"29", c:"朱慈慧" }, { s:"30", c:"康珈嘉" }
+                { s:"01", c:"姜宥庭", e:"Jamie", j:"none", xp:0 }, { s:"02", c:"蔡承叡", e:"Felix", j:"hero", xp:2 },
+                { s:"03", c:"蘇之榮", e:"Ron", j:"hunter", xp:0 }, { s:"04", c:"林家正", e:"Zachary", j:"magician", xp:6 },
+                { s:"05", c:"楊牧", e:"Matt", j:"beast", xp:5 }, { s:"06", c:"李語桐", e:"Harvey", j:"hunter", xp:3 },
+                { s:"07", c:"黃宇宸", e:"Joe", j:"hunter", xp:1 }, { s:"08", c:"游允樂", e:"Alston", j:"hunter", xp:2 },
+                { s:"09", c:"葉庭宇", e:"Timmy", j:"magician", xp:6 }, { s:"10", c:"馬琮越", e:"Stamley", j:"magician", xp:0 },
+                { s:"11", c:"陳卓均", e:"Eric", j:"hero", xp:5 }, { s:"12", c:"黃品睿", e:"Rico", j:"beast", xp:2 },
+                { s:"13", c:"陳奕維", e:"Ian", j:"hero", xp:6 }, { s:"14", c:"許柏誠", e:"", j:"none", xp:0 },
+                { s:"15", c:"黃泓邁", e:"Miles", j:"hero", xp:3 }, { s:"16", c:"陳奕呈", e:"Roy", j:"beast", xp:2 },
+                { s:"17", c:"林琬翎", e:"Winnie", j:"magician", xp:1 }, { s:"18", c:"林孟璇", e:"Marina", j:"magician", xp:2 },
+                { s:"19", c:"黃柔瑜", e:"Zoe", j:"magician", xp:2 }, { s:"20", c:"吳恩柔", e:"Gracie", j:"magician", xp:6 },
+                { s:"21", c:"黃若芸", e:"Miho", j:"magician", xp:5 }, { s:"22", c:"張瑋芯", e:"Ury", j:"beast", xp:5 },
+                { s:"23", c:"陳芊默", e:"Momo", j:"beast", xp:2 }, { s:"24", c:"王常曦", e:"Cynthia", j:"beast", xp:2 },
+                { s:"25", c:"郭采辰", e:"Prisha", j:"beast", xp:3 }, { s:"26", c:"郭采一", e:"Adoinsha", j:"beast", xp:3 },
+                { s:"27", c:"黃歆茹", e:"Lulu", j:"hero", xp:2 }, { s:"28", c:"徐子晴", e:"Sunny", j:"hero", xp:1 },
+                { s:"29", c:"朱慈慧", e:"Hui", j:"royal", xp:0 }, { s:"30", c:"康珈嘉", e:"Kamryn", j:"beast", xp:5 }
             ],
             "508": [
-                { s:"01", c:"張揚湛" }, { s:"02", c:"許以亮" }, { s:"03", c:"王永昊" }, { s:"04", c:"陳士軒" }, { s:"05", c:"黃照恩" },
-                { s:"06", c:"王竑凱" }, { s:"07", c:"賴思愷" }, { s:"08", c:"蘇澤修" }, { s:"09", c:"林品碩" }, { s:"10", c:"何政雍" },
-                { s:"11", c:"陳彥碩" }, { s:"12", c:"周奕全" }, { s:"13", c:"詹子硯" }, { s:"14", c:"李濬城" }, { s:"15", c:"李濬盛" },
-                { s:"16", c:"吳宇恩" }, { s:"17", c:"張予寧" }, { s:"18", c:"王晨瑀" }, { s:"19", c:"鍾和臻" }, { s:"20", c:"練予璁" },
-                { s:"21", c:"陳品汝" }, { s:"22", c:"連敏芯" }, { s:"23", c:"許允姸" }, { s:"24", c:"許允慈" }, { s:"25", c:"洪娜恩" },
-                { s:"26", c:"鄭妶僖" }, { s:"27", c:"姚湘琳" }, { s:"28", c:"陳俞霏" }, { s:"29", c:"李孟璇" }, { s:"30", c:"薛伊岑" },
-                { s:"31", c:"黃洛歆" }
+                { s:"01", c:"張揚湛", e:"Zain", j:"hero", xp:5 }, { s:"02", c:"許以亮", e:"Leo", j:"hero", xp:2 },
+                { s:"03", c:"王永昊", e:"Hulk", j:"hunter", xp:1 }, { s:"04", c:"陳士軒", e:"Dodger", j:"hero", xp:2 },
+                { s:"05", c:"黃照恩", e:"Eli", j:"magician", xp:4 }, { s:"06", c:"王竑凱", e:"Kai", j:"beast", xp:6 },
+                { s:"07", c:"賴思愷", e:"Carson", j:"hero", xp:3 }, { s:"08", c:"蘇澤修", e:"Oscar", j:"hero", xp:2 },
+                { s:"09", c:"林品碩", e:"Bryan", j:"hunter", xp:3 }, { s:"10", c:"何政雍", e:"Lincoln", j:"hero", xp:3 },
+                { s:"11", c:"陳彥碩", e:"Eason", j:"royal", xp:3 }, { s:"12", c:"周奕全", e:"Ian", j:"hunter", xp:1 },
+                { s:"13", c:"詹子硯", e:"Ian", j:"hero", xp:3 }, { s:"14", c:"李濬城", e:"Roy", j:"magician", xp:2 },
+                { s:"15", c:"李濬盛", e:"Ryan", j:"beast", xp:3 }, { s:"16", c:"吳宇恩", e:"Oscar", j:"royal", xp:2 },
+                { s:"17", c:"張予寧", e:"Ning", j:"beast", xp:1 }, { s:"18", c:"王晨瑀", e:"Harper", j:"hunter", xp:1 },
+                { s:"19", c:"鍾和臻", e:"Una", j:"beast", xp:2 }, { s:"20", c:"練予璁", e:"Amy", j:"beast", xp:4 },
+                { s:"21", c:"陳品汝", e:"Katy", j:"hunter", xp:2 }, { s:"22", c:"連敏芯", e:"Cherry", j:"beast", xp:2 },
+                { s:"23", c:"許允姸", e:"", j:"magician", xp:0 }, { s:"24", c:"許允慈", e:"Anna", j:"none", xp:0 },
+                { s:"25", c:"洪娜恩", e:"Nina", j:"royal", xp:3 }, { s:"26", c:"鄭妶僖", e:"Kanice", j:"hunter", xp:3 },
+                { s:"27", c:"姚湘琳", e:"Hailey", j:"beast", xp:2 }, { s:"28", c:"陳俞霏", e:"Annie", j:"beast", xp:2 },
+                { s:"29", c:"李孟璇", e:"Elly", j:"hunter", xp:2 }, { s:"30", c:"薛伊岑", e:"Eva", j:"hero", xp:0 },
+                { s:"31", c:"黃洛歆", e:"", j:"magician", xp:0 }
             ]
         };
 
@@ -576,7 +627,7 @@
             'beast': { bg: 'class-bg-beast', color: '#f97316', name: 'Beast', levels: ['🐾', '🦴', '🐅', '🐻', '🦖'] }
         };
 
-        const XP_PER_LEVEL = 15;
+        const XP_PER_LEVEL = 30; // 🌟 30XP 升一級
         const getLevel = (xp) => Math.floor(xp / XP_PER_LEVEL) + 1;
         const getRank = (level) => {
             if (level >= 20) return 5;
@@ -621,11 +672,14 @@
             isSpinning: false,
             timerSeconds: 300,
             timerInterval: null,
-            isTimerRunning: false
+            isTimerRunning: false,
+            levelUpQueue: [],
+            isLotteryOpen: false,
+            currentLotteryEvent: null
         };
 
         let db = null;
-        let unsubscribe = null;
+        let syncTimeout = null;
 
         function buildInitialData() {
             const built = {};
@@ -633,67 +687,13 @@
                 rawRosters[cName].forEach(s => {
                     const id = `${cName}-${s.s}`;
                     built[id] = {
-                        id: id, class: cName, seat: s.s, zh: s.c, en: '', 
-                        job: 'none', xp: 0, todayPts: 0, history: {}, group: 0,
-                        absent: false
+                        id: id, class: cName, seat: s.s, zh: s.c, en: s.e || '', 
+                        job: s.j || 'none', xp: s.xp || 0, todayPts: 0, history: {}, group: 0,
+                        absent: false, nameColor: '', prizeIcon: ''
                     };
                 });
             }
             return built;
-        }
-
-        function mergeWithRawRosters(loadedData) {
-            const merged = { ...loadedData };
-            for (let cName in rawRosters) {
-                rawRosters[cName].forEach(s => {
-                    const id = `${cName}-${s.s}`;
-                    if (!merged[id]) {
-                        merged[id] = {
-                            id: id, class: cName, seat: s.s, zh: s.c, en: '', 
-                            job: 'none', xp: 0, todayPts: 0, history: {}, group: 0,
-                            absent: false
-                        };
-                    } else {
-                        if(typeof merged[id].group === 'undefined') merged[id].group = 0;
-                        if(typeof merged[id].absent === 'undefined') merged[id].absent = false;
-                        if(typeof merged[id].class === 'undefined') merged[id].class = cName;
-                        if(typeof merged[id].seat === 'undefined') merged[id].seat = s.s;
-                    }
-                });
-            }
-            return merged;
-        }
-
-        function findBestHistoricalData() {
-            let bestData = null;
-            let maxScore = -1;
-            
-            for(let i=0; i<localStorage.length; i++) {
-                let key = localStorage.key(i);
-                if (key.includes('classquest')) {
-                    try {
-                        const data = JSON.parse(localStorage.getItem(key));
-                        if (data && typeof data === 'object') {
-                            let score = 0;
-                            let valid = false;
-                            for (let id in data) {
-                                if (data[id] && data[id].class) {
-                                    valid = true;
-                                    score += (data[id].xp || 0);
-                                    if (data[id].group && data[id].group > 0) {
-                                        score += 1000; 
-                                    }
-                                }
-                            }
-                            if (valid && score > maxScore) {
-                                maxScore = score;
-                                bestData = data;
-                            }
-                        }
-                    } catch(e) {}
-                }
-            }
-            return { data: bestData, score: maxScore };
         }
 
         function playSound(type) {
@@ -732,10 +732,6 @@
                     osc.frequency.setValueAtTime(0, now + 0.1); osc.frequency.setValueAtTime(880, now + 0.2);
                     gain.gain.setValueAtTime(0.4, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
                     osc.start(now); osc.stop(now + 0.5);
-                } else if (type === 'select') {
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(600, now);
-                    gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                    osc.start(now); osc.stop(now + 0.1);
                 }
             } catch(e) {}
         }
@@ -751,8 +747,8 @@
         function shootConfetti() {
             const container = document.getElementById('confetti-container');
             container.innerHTML = ''; 
-            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-            for(let i = 0; i < 80; i++) {
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+            for(let i = 0; i < 100; i++) {
                 const conf = document.createElement('div');
                 conf.className = 'confetti-piece ' + (Math.random() > 0.5 ? 'circle' : '');
                 conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
@@ -761,7 +757,7 @@
                 conf.style.animationDelay = (Math.random() * 0.5) + 's';
                 container.appendChild(conf);
             }
-            setTimeout(() => container.innerHTML = '', 3000);
+            setTimeout(() => container.innerHTML = '', 3500);
         }
 
         function showToast(msg, type = 'info') {
@@ -772,9 +768,7 @@
             toast.innerHTML = type === 'error' ? `⚠️ ${msg}` : (type === 'success' ? `✅ ${msg}` : `💡 ${msg}`);
             container.appendChild(toast);
             
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-[-20px]', 'opacity-0');
-            });
+            requestAnimationFrame(() => toast.classList.remove('translate-y-[-20px]', 'opacity-0'));
             setTimeout(() => {
                 toast.classList.add('translate-y-[-20px]', 'opacity-0');
                 setTimeout(() => toast.remove(), 300);
@@ -787,115 +781,72 @@
             document.getElementById('confirm-modal').classList.remove('hidden');
         }
 
-        function updateSyncStatus(mode) {
-            state.syncMode = mode;
-            const dot = document.getElementById('sync-dot');
-            const text = document.getElementById('sync-text');
-            if(mode === 'online') {
-                dot.className = 'w-2 h-2 rounded-full bg-green-500 anim-pulse';
-                text.innerText = '已連線至舊版空間 (雲端同步中)';
-                text.className = 'text-green-700 font-bold';
-            } else {
-                dot.className = 'w-2 h-2 rounded-full bg-amber-500';
-                text.innerText = '離線單機模式';
-                text.className = 'text-amber-700 font-bold';
-            }
-        }
-
-        async function syncData(silent = false) {
+        function syncData() {
+            state.students._lastUpdate = Date.now();
+            localStorage.setItem('classquest_v11_complete', JSON.stringify(state.students));
+            
             if (state.syncMode === 'online' && db) {
-                try {
+                clearTimeout(syncTimeout);
+                syncTimeout = setTimeout(() => {
                     const docRef = doc(db, 'classrooms', PUBLIC_ROOM_ID);
-                    await setDoc(docRef, { students: state.students }, { merge: false });
-                    localStorage.setItem('classquest_offline_v8', JSON.stringify(state.students)); 
-                    return true;
-                } catch (e) {
-                    if(!silent) updateSyncStatus('offline');
-                    return false;
-                }
-            } else {
-                localStorage.setItem('classquest_offline_v8', JSON.stringify(state.students));
-                return true;
+                    setDoc(docRef, { students: state.students }).catch(()=>{});
+                }, 1000);
             }
-        }
-
-        function fallbackToLocalOrInit() {
-            const bestSaved = findBestHistoricalData();
-            if (bestSaved.data) {
-                state.students = mergeWithRawRosters(bestSaved.data);
-            } else {
-                state.students = buildInitialData();
-            }
-            syncData(true);
         }
 
         async function initFirebase() {
+            const localData = localStorage.getItem('classquest_v11_complete');
+            if (localData) {
+                state.students = JSON.parse(localData);
+            } else {
+                state.students = buildInitialData(); 
+                syncData();
+            }
+            CQ.renderAll();
+
             try {
                 const app = initializeApp(firebaseConfig);
                 const auth = getAuth(app);
                 db = getFirestore(app);
-
                 await signInAnonymously(auth);
-                updateSyncStatus('online');
-
-                const docRef = doc(db, 'classrooms', PUBLIC_ROOM_ID);
-                unsubscribe = onSnapshot(docRef, (docSnap) => {
-                    const localBest = findBestHistoricalData();
-                    let cloudScore = -1;
-                    let cloudData = null;
-
+                state.syncMode = 'online';
+                document.getElementById('sync-dot').className = 'w-2 h-2 rounded-full bg-green-500 anim-pulse';
+                document.getElementById('sync-text').innerText = '已連線雲端';
+                
+                onSnapshot(doc(db, 'classrooms', PUBLIC_ROOM_ID), (docSnap) => {
                     if (docSnap.exists() && docSnap.data().students) {
-                        cloudData = docSnap.data().students;
-                        cloudScore = 0;
-                        for (let id in cloudData) {
-                            cloudScore += (cloudData[id].xp || 0);
-                            if (cloudData[id].group && cloudData[id].group > 0) {
-                                cloudScore += 1000;
-                            }
+                        const cloud = docSnap.data().students;
+                        if (!state.students._lastUpdate || (cloud._lastUpdate && cloud._lastUpdate > state.students._lastUpdate)) {
+                            state.students = cloud;
+                            CQ.renderAll();
                         }
                     }
-
-                    if (localBest.score > cloudScore && localBest.data) {
-                        state.students = mergeWithRawRosters(localBest.data);
-                        syncData(true); 
-                    } else if (cloudData && Object.keys(cloudData).length > 5) {
-                        state.students = mergeWithRawRosters(cloudData);
-                        localStorage.setItem('classquest_offline_v8', JSON.stringify(state.students));
-                    } else {
-                        fallbackToLocalOrInit();
-                    }
-                    
-                    CQ.renderAll();
-                    updateSyncStatus('online'); 
-                }, (error) => {
-                    enableOfflineMode();
                 });
-
             } catch (e) {
-                enableOfflineMode();
+                console.log("Offline mode");
             }
         }
 
-        function enableOfflineMode() {
-            updateSyncStatus('offline');
-            fallbackToLocalOrInit();
-            CQ.renderAll();
-        }
-
         function checkDailyReset() {
-            const lastLogin = localStorage.getItem('cq_last_date_v8');
+            const lastLogin = localStorage.getItem('cq_last_date_v11');
             const todayStr = new Date().toDateString();
             if(lastLogin !== todayStr) {
                 for(let id in state.students) {
-                    state.students[id].todayPts = 0;
-                    state.students[id].absent = false;
+                    if(state.students[id].id) {
+                        state.students[id].todayPts = 0;
+                        state.students[id].absent = false;
+                    }
                 }
-                localStorage.setItem('cq_last_date_v8', todayStr);
-                syncData(true);
+                localStorage.setItem('cq_last_date_v11', todayStr);
+                syncData();
             }
         }
 
         window.CQ = {
+            forceReconnect: () => {
+                showToast("🔄 嘗試重新連線至資料庫...", "info");
+                initFirebase();
+            },
             cancelConfirm: () => {
                 document.getElementById('confirm-modal').classList.add('hidden');
                 state.confirmAction = null;
@@ -905,7 +856,6 @@
                 document.getElementById('confirm-modal').classList.add('hidden');
                 state.confirmAction = null;
             },
-
             switchView: (viewName) => {
                 state.view = viewName;
                 document.getElementById('view-main').classList.add('hidden');
@@ -927,15 +877,13 @@
                     CQ.renderReport();
                 }
             },
-
             changeClass: (cName) => {
                 state.activeClass = cName;
                 state.selectedIds.clear();
                 CQ.renderAll();
             },
-
             renderAll: () => {
-                const classes = [...new Set(Object.values(state.students).map(s => s.class))].sort();
+                const classes = [...new Set(Object.values(state.students).map(s => s.class).filter(c=>c))].sort();
                 const selMain = document.getElementById('class-selector');
                 const selEdit = document.getElementById('edit-class-selector');
                 const selReport = document.getElementById('report-class-selector');
@@ -950,9 +898,7 @@
                 if(state.view === 'main') CQ.renderGrid();
                 if(state.view === 'edit') CQ.renderEditList();
                 if(state.view === 'report') CQ.renderReport();
-                if(state.modalTargetId) CQ.openModal(state.modalTargetId);
             },
-
             renderGrid: () => {
                 const grid = document.getElementById('student-grid');
                 grid.innerHTML = '';
@@ -964,15 +910,13 @@
                 classStudents.forEach(s => {
                     const isSelected = state.selectedIds.has(s.id);
                     const job = JOBS[s.job] || JOBS['none'];
-                    
                     const lvl = getLevel(s.xp);
-                    const rank = getRank(lvl);
-                    const rankInfo = getRankInfo(rank);
-                    const icon = job.levels[rank-1] || '👤';
-
+                    const rankInfo = getRankInfo(getRank(lvl));
+                    const icon = job.levels[getRank(lvl)-1] || '👤';
                     const progressPercent = ((s.xp % XP_PER_LEVEL) / XP_PER_LEVEL) * 100;
-                    const displayName = s.en ? s.en : s.zh;
-                    const subName = s.en ? s.zh : '';
+                    
+                    const nameColorStyle = s.nameColor ? `color: ${s.nameColor}; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);` : 'color: #1e293b;';
+                    const prizeHtml = s.prizeIcon ? `<span class="ml-1 text-xl">${s.prizeIcon}</span>` : '';
                     
                     const groupBadge = s.group > 0 ? `<div class="absolute top-2 left-12 bg-purple-100 text-purple-700 text-xs font-bold px-2 py-0.5 rounded shadow-sm z-10 border border-purple-200">G${s.group}</div>` : '';
                     const absentStamp = s.absent ? `<div class="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"><span class="bg-red-600 text-white font-black text-2xl px-4 py-1 rounded-xl border-4 border-red-800 transform -rotate-12 shadow-2xl">請假</span></div>` : '';
@@ -988,210 +932,155 @@
                         <div class="w-20 h-20 mt-4 bg-white rounded-full flex items-center justify-center text-4xl shadow-sm border-2 ${isSelected ? 'border-blue-500' : 'border-white'} ring-4 ${rankInfo.ring} mb-3 z-10 transition-transform ${!s.absent ? 'group-hover:scale-110' : ''}">
                             ${icon}
                         </div>
-                        <div class="font-bold text-slate-800 text-2xl z-10 truncate w-full text-center tracking-wide" title="${displayName}">${displayName}</div>
-                        ${subName ? `<div class="text-sm text-slate-500 z-10 truncate w-full text-center font-bold mt-1">${subName}</div>` : '<div class="h-5"></div>'}
+                        <div class="font-black text-2xl z-10 truncate w-full text-center tracking-wide" style="${nameColorStyle}">${s.zh}${prizeHtml}</div>
+                        ${s.en ? `<div class="text-sm text-slate-500 z-10 truncate w-full text-center font-bold mt-1">${s.en}</div>` : '<div class="h-5"></div>'}
                         
                         <div class="mt-3 w-full bg-slate-200 h-3 rounded-full overflow-hidden z-10 shadow-inner">
                             <div class="h-full bg-blue-500 transition-all duration-300" style="width: ${progressPercent}%"></div>
                         </div>
                         <div class="flex justify-between w-full mt-2 px-1 z-10">
                             <span class="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">Lv.${lvl}</span>
-                            <span class="text-xs font-bold text-slate-500">${s.xp} XP</span>
+                            <span class="text-xs font-bold text-slate-500">${s.xp} / ${XP_PER_LEVEL}</span>
                         </div>
                         ${s.todayPts !== 0 ? `<div class="absolute top-2 right-2 bg-${s.todayPts>0?'green':'red'}-100 text-${s.todayPts>0?'green':'red'}-700 text-sm font-bold px-2 py-0.5 rounded-full shadow-sm z-10">${s.todayPts>0?'+':''}${s.todayPts}</div>` : ''}
                     `;
 
                     let timer;
-                    const onDown = () => {
-                        if(s.absent) return;
-                        timer = setTimeout(() => {
-                            playSound('select');
-                            CQ.toggleSelect(s.id);
-                        }, 500); 
+                    const onDown = () => { 
+                        // 🌟 即使請假也能長按選取，方便批次取消請假 🌟
+                        timer = setTimeout(() => { playSound('coin'); CQ.toggleSelect(s.id); }, 500); 
                     };
                     const onUp = () => clearTimeout(timer);
-                    
                     card.addEventListener('mousedown', (e) => { if(e.button !== 2) onDown(); });
                     card.addEventListener('mouseup', onUp);
                     card.addEventListener('mouseleave', onUp);
                     card.addEventListener('touchstart', onDown, {passive:true});
                     card.addEventListener('touchend', onUp);
-
+                    
+                    // 🌟 一鍵取消請假功能 🌟
                     card.addEventListener('click', () => {
-                        if(s.absent && state.selectedIds.size === 0) return showToast('該生今日請假，無法操作', 'error');
-                        if(state.selectedIds.size > 0 && !s.absent) {
+                        if(state.selectedIds.size > 0) {
                             CQ.toggleSelect(s.id);
-                        } else if (!s.absent) {
+                        } else if (s.absent) {
+                            CQ.askConfirm(`確定要取消 ${s.zh} 的請假狀態嗎？`, () => {
+                                state.students[s.id].absent = false;
+                                syncData();
+                                CQ.renderGrid();
+                                showToast(`✅ 已恢復 ${s.zh} 的上課狀態！`, "success");
+                            });
+                        } else {
                             CQ.openModal(s.id);
                         }
                     });
                     
                     card.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
-                        if(!s.absent) CQ.toggleSelect(s.id);
+                        CQ.toggleSelect(s.id);
                     });
-
+                    
                     grid.appendChild(card);
                 });
             },
-
-            toggleSelect: (id) => {
-                if(state.selectedIds.has(id)) state.selectedIds.delete(id);
-                else state.selectedIds.add(id);
-                CQ.renderGrid();
-            },
-            clearSelection: () => {
-                state.selectedIds.clear();
-                CQ.renderGrid();
-            },
+            toggleSelect: (id) => { state.selectedIds.has(id) ? state.selectedIds.delete(id) : state.selectedIds.add(id); CQ.renderGrid(); },
+            clearSelection: () => { state.selectedIds.clear(); CQ.renderGrid(); },
             toggleAbsentSelected: () => {
                 if(state.selectedIds.size === 0) return showToast("請先長按或點選學生卡片", "error");
-                let changed = 0;
-                state.selectedIds.forEach(id => {
-                    if(state.students[id]) {
-                        state.students[id].absent = !state.students[id].absent;
-                        changed++;
-                    }
-                });
-                CQ.clearSelection();
-                syncData();
-                showToast(`已切換 ${changed} 位學生的請假狀態`, "success");
+                state.selectedIds.forEach(id => { if(state.students[id]) state.students[id].absent = !state.students[id].absent; });
+                CQ.clearSelection(); syncData();
             },
 
             openModal: (id) => {
                 state.modalTargetId = id;
                 const s = state.students[id];
-                if(!s) return;
-
-                const modal = document.getElementById('student-modal');
                 const job = JOBS[s.job] || JOBS['none'];
                 const lvl = getLevel(s.xp);
-                const rank = getRank(lvl);
-                const rankInfo = getRankInfo(rank);
-                const icon = job.levels[rank-1] || '👤';
-
+                
                 document.getElementById('modal-header').className = `p-6 relative text-center shrink-0 ${job.bg}`;
-                document.getElementById('modal-avatar').innerHTML = icon;
+                document.getElementById('modal-avatar').innerHTML = job.levels[getRank(lvl)-1] || '👤';
                 
                 const enEl = document.getElementById('modal-en-name');
                 const inEl = document.getElementById('modal-en-input');
-                enEl.innerHTML = s.en ? s.en : "✏️ <span class='text-xl'>Add English Name</span>";
+                enEl.innerHTML = s.en ? s.en : "✏️ <span class='text-xl'>Add Name</span>";
                 inEl.value = s.en;
-                enEl.classList.remove('hidden');
-                inEl.classList.add('hidden');
+                enEl.classList.remove('hidden'); inEl.classList.add('hidden');
 
                 document.getElementById('modal-zh-name').innerText = s.zh;
-                document.getElementById('modal-seat-info').innerText = `Seat ${s.seat}`;
+                document.getElementById('modal-zh-name').style.color = s.nameColor || '#1e293b';
+                document.getElementById('modal-prize-icon').innerText = s.prizeIcon || '';
                 
+                document.getElementById('modal-seat-info').innerText = `Seat ${s.seat}`;
                 const groupEl = document.getElementById('modal-group-info');
-                if (s.group > 0) {
-                    groupEl.innerText = `Group ${s.group}`;
-                    groupEl.classList.remove('hidden');
-                } else {
-                    groupEl.classList.add('hidden');
-                }
+                if (s.group > 0) { groupEl.innerText = `Group ${s.group}`; groupEl.classList.remove('hidden'); } 
+                else { groupEl.classList.add('hidden'); }
                 
                 document.getElementById('modal-class-info').innerText = `${job.name}`;
-                document.getElementById('modal-xp-info').innerText = `Lv.${lvl} ${rankInfo.title} (${s.xp} XP)`;
+                document.getElementById('modal-xp-info').innerText = `Lv.${lvl} (${s.xp} XP)`;
 
-                if(s.job === 'none') {
-                    document.getElementById('section-choose-class').classList.remove('hidden');
-                    document.getElementById('section-give-points').classList.add('hidden');
-                } else {
-                    document.getElementById('section-choose-class').classList.add('hidden');
-                    document.getElementById('section-give-points').classList.remove('hidden');
-                }
-
-                modal.classList.remove('hidden');
+                document.getElementById('section-choose-class').classList.toggle('hidden', s.job !== 'none');
+                document.getElementById('section-give-points').classList.toggle('hidden', s.job === 'none');
+                document.getElementById('student-modal').classList.remove('hidden');
             },
-            closeModal: () => {
-                state.modalTargetId = null;
-                document.getElementById('student-modal').classList.add('hidden');
-            },
+            closeModal: () => { state.modalTargetId = null; document.getElementById('student-modal').classList.add('hidden'); },
             editEnNameInModal: () => {
                 document.getElementById('modal-en-name').classList.add('hidden');
                 const input = document.getElementById('modal-en-input');
-                input.classList.remove('hidden');
-                input.focus(); input.select();
+                input.classList.remove('hidden'); input.focus(); input.select();
             },
             saveEnNameFromModal: () => {
                 if(!state.modalTargetId) return;
                 const newName = document.getElementById('modal-en-input').value.trim();
                 document.getElementById('modal-en-input').classList.add('hidden');
                 document.getElementById('modal-en-name').classList.remove('hidden');
-                
                 if(newName !== state.students[state.modalTargetId].en) {
                     state.students[state.modalTargetId].en = newName;
-                    syncData();
-                    CQ.renderGrid();
+                    syncData(); CQ.renderGrid();
                 }
             },
             setJob: (jobId) => {
                 if(!state.modalTargetId) return;
                 state.students[state.modalTargetId].job = jobId;
-                playSound('levelup');
-                shootConfetti();
-                syncData();
+                playSound('levelup'); shootConfetti(); syncData();
                 CQ.openModal(state.modalTargetId); 
             },
             askResetJob: () => {
                 if(!state.modalTargetId) return;
                 askConfirm("確定要重置職業嗎？", () => {
                     state.students[state.modalTargetId].job = 'none';
-                    syncData();
-                    CQ.openModal(state.modalTargetId);
+                    syncData(); CQ.openModal(state.modalTargetId);
                 });
             },
 
             awardPoint: (pts, reason) => {
-                playSound('coin');
                 if(state.selectedIds.size > 0) {
                     state.selectedIds.forEach(id => processPoint(id, pts));
-                    CQ.clearSelection();
+                    state.selectedIds.clear();
                     CQ.closeMultiAwardModal();
                 } else if (state.modalTargetId) {
                     processPoint(state.modalTargetId, pts);
                     CQ.closeModal();
                 }
-                syncData();
+                syncData(); CQ.renderGrid();
+                CQ.checkLevelUpQueue();
             },
             deductPoint: (pts, reason) => {
                 playSound('error');
                 document.body.classList.add('shake-screen');
                 setTimeout(()=>document.body.classList.remove('shake-screen'), 400);
-
-                if(state.selectedIds.size > 0) {
-                    state.selectedIds.forEach(id => processPoint(id, pts));
-                    CQ.clearSelection();
-                    CQ.closeMultiAwardModal();
-                } else if (state.modalTargetId) {
-                    processPoint(state.modalTargetId, pts);
-                    CQ.closeModal();
-                }
-                syncData();
+                CQ.awardPoint(pts, reason);
             },
             awardCustom: (type) => {
                 let ptsInput, reasonInput;
-                if (type === 'single') {
-                    ptsInput = document.getElementById('custom-pts-single'); reasonInput = document.getElementById('custom-reason-single');
-                } else if (type === 'multi') {
-                    ptsInput = document.getElementById('custom-pts-multi'); reasonInput = document.getElementById('custom-reason-multi');
-                } else if (type === 'group') {
-                    ptsInput = document.getElementById('custom-pts-group'); reasonInput = document.getElementById('custom-reason-group');
-                }
+                if (type === 'single') { ptsInput = document.getElementById('custom-pts-single'); reasonInput = document.getElementById('custom-reason-single'); } 
+                else if (type === 'multi') { ptsInput = document.getElementById('custom-pts-multi'); reasonInput = document.getElementById('custom-reason-multi'); } 
+                else if (type === 'group') { ptsInput = document.getElementById('custom-pts-group'); reasonInput = document.getElementById('custom-reason-group'); }
                 
                 const pts = parseInt(ptsInput.value);
                 const reason = reasonInput.value.trim() || '自訂分數';
-                
                 if (isNaN(pts) || pts === 0) return showToast('請輸入有效的分數 (非 0)！', 'error');
                 
-                if (type === 'group') {
-                    CQ.awardGroupPoint(pts, reason);
-                } else if (pts > 0) {
-                    CQ.awardPoint(pts, reason);
-                } else {
-                    CQ.deductPoint(pts, reason);
-                }
+                if (type === 'group') CQ.awardGroupPoint(pts, reason);
+                else if (pts > 0) CQ.awardPoint(pts, reason);
+                else CQ.deductPoint(pts, reason);
                 
                 ptsInput.value = ''; reasonInput.value = '';
             },
@@ -1201,22 +1090,15 @@
                 document.getElementById('multi-award-count').innerText = state.selectedIds.size;
                 document.getElementById('multi-award-modal').classList.remove('hidden');
             },
-            closeMultiAwardModal: () => {
-                document.getElementById('multi-award-modal').classList.add('hidden');
-            },
-            
+            closeMultiAwardModal: () => document.getElementById('multi-award-modal').classList.add('hidden'),
+
             openGroupAwardModal: () => {
                 state.selectedGroupForAward = 1;
                 CQ.renderGroupModalUI();
                 document.getElementById('group-award-modal').classList.remove('hidden');
             },
-            closeGroupAwardModal: () => {
-                document.getElementById('group-award-modal').classList.add('hidden');
-            },
-            selectGroupForAward: (g) => {
-                state.selectedGroupForAward = g;
-                CQ.renderGroupModalUI();
-            },
+            closeGroupAwardModal: () => document.getElementById('group-award-modal').classList.add('hidden'),
+            selectGroupForAward: (g) => { state.selectedGroupForAward = g; CQ.renderGroupModalUI(); },
             renderGroupModalUI: () => {
                 const container = document.getElementById('group-selector-container');
                 container.innerHTML = '';
@@ -1243,42 +1125,81 @@
             awardGroupPoint: (pts, reason) => {
                 const g = state.selectedGroupForAward;
                 const classStudents = Object.values(state.students).filter(s => s.class === state.activeClass && s.group === g && !s.absent);
-                
                 if(classStudents.length === 0) return showToast(`第 ${g} 組沒有可用學生！`, "error");
                 
                 if(pts < 0) {
-                    playSound('error');
-                    document.body.classList.add('shake-screen');
+                    playSound('error'); document.body.classList.add('shake-screen');
                     setTimeout(()=>document.body.classList.remove('shake-screen'), 400);
-                } else {
-                    playSound('coin');
                 }
                 
                 classStudents.forEach(s => processPoint(s.id, pts));
                 CQ.closeGroupAwardModal();
-                syncData();
+                syncData(); CQ.renderGrid();
+                CQ.checkLevelUpQueue();
             },
 
+            // 🌟 升級抽獎系統邏輯 🌟
+            checkLevelUpQueue: () => {
+                if (state.levelUpQueue.length > 0 && !state.isLotteryOpen) {
+                    state.isLotteryOpen = true;
+                    state.currentLotteryEvent = state.levelUpQueue.shift();
+                    CQ.showLotteryUI();
+                }
+            },
+            showLotteryUI: () => {
+                const s = state.students[state.currentLotteryEvent.id];
+                document.getElementById('lottery-title').innerText = `🎉 恭喜 ${s.zh} 升到 Lv.${state.currentLotteryEvent.newLvl}！`;
+                document.getElementById('lottery-box').classList.remove('hidden');
+                document.getElementById('lottery-result').classList.add('hidden');
+                document.getElementById('lottery-modal').classList.remove('hidden');
+                playSound('levelup');
+            },
+            rollLottery: () => {
+                const s = state.students[state.currentLotteryEvent.id];
+                const isIcon = Math.random() > 0.5; 
+                
+                const icons = ['👑','🦄','🐲','🚀','⭐','🔥','🍀','💎','🌈','🍕','⚡','🌟','🏆','🎯','🦊','🦁'];
+                const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+                
+                let msg = '';
+                if (isIcon) {
+                    s.prizeIcon = icons[Math.floor(Math.random() * icons.length)];
+                    msg = `獲得了超稀有標記：${s.prizeIcon}`;
+                } else {
+                    s.nameColor = colors[Math.floor(Math.random() * colors.length)];
+                    msg = `獲得了專屬名字顏色！`;
+                }
+
+                document.getElementById('lottery-box').classList.add('hidden');
+                document.getElementById('lottery-result').classList.remove('hidden');
+                document.getElementById('lottery-result-text').innerText = msg;
+                document.getElementById('lottery-result-name').innerText = `${s.zh} ${s.prizeIcon || ''}`;
+                document.getElementById('lottery-result-name').style.color = s.nameColor || '#1e293b';
+
+                syncData(); CQ.renderGrid(); shootConfetti();
+            },
+            closeLottery: () => {
+                document.getElementById('lottery-modal').classList.add('hidden');
+                state.isLotteryOpen = false;
+                setTimeout(() => CQ.checkLevelUpQueue(), 300); // 檢查下一個升級者
+            },
+
+            // 轉盤功能
             openWheel: () => {
                 const available = Object.values(state.students).filter(s => s.class === state.activeClass && !s.absent);
                 if(available.length === 0) return showToast("本班目前沒有可抽籤的學生", "error");
-                
                 state.wheelStudents = available;
                 document.getElementById('wheel-modal').classList.remove('hidden');
                 document.getElementById('wheel-winner-display').classList.add('hidden');
                 document.getElementById('wheel-winner-card').classList.add('scale-0');
                 CQ.drawWheel();
             },
-            closeWheel: () => {
-                document.getElementById('wheel-modal').classList.add('hidden');
-            },
+            closeWheel: () => document.getElementById('wheel-modal').classList.add('hidden'),
             drawWheel: () => {
                 const canvas = document.getElementById('wheel-canvas');
                 const ctx = canvas.getContext('2d');
-                const size = 500;
-                canvas.width = size; canvas.height = size;
+                const size = 500; canvas.width = size; canvas.height = size;
                 const r = size / 2;
-                
                 ctx.clearRect(0, 0, size, size);
                 const students = state.wheelStudents;
                 const sliceAngle = (2 * Math.PI) / students.length;
@@ -1287,81 +1208,49 @@
                 for (let i = 0; i < students.length; i++) {
                     const startAngle = state.wheelAngle + i * sliceAngle;
                     const endAngle = startAngle + sliceAngle;
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(r, r);
-                    ctx.arc(r, r, r, startAngle, endAngle);
-                    ctx.fillStyle = colors[i % colors.length];
-                    ctx.fill();
-                    ctx.stroke();
-
-                    ctx.save();
-                    ctx.translate(r, r);
-                    ctx.rotate(startAngle + sliceAngle / 2);
-                    ctx.textAlign = "right";
-                    ctx.fillStyle = "#334155";
-                    ctx.font = "bold 24px 'Microsoft JhengHei'";
-                    ctx.fillText(students[i].zh, r - 30, 8);
-                    ctx.restore();
+                    ctx.beginPath(); ctx.moveTo(r, r); ctx.arc(r, r, r, startAngle, endAngle);
+                    ctx.fillStyle = colors[i % colors.length]; ctx.fill(); ctx.stroke();
+                    ctx.save(); ctx.translate(r, r); ctx.rotate(startAngle + sliceAngle / 2);
+                    ctx.textAlign = "right"; ctx.fillStyle = "#334155"; ctx.font = "bold 24px 'Microsoft JhengHei'";
+                    ctx.fillText(students[i].zh, r - 30, 8); ctx.restore();
                 }
             },
             spinWheel: () => {
                 if(state.isSpinning || state.wheelStudents.length === 0) return;
                 state.isSpinning = true;
-                
                 const btn = document.getElementById('btn-wheel-spin');
-                btn.disabled = true;
-                btn.classList.add('opacity-50');
-                
+                btn.disabled = true; btn.classList.add('opacity-50');
                 let spinVelocity = Math.random() * 0.2 + 0.4;
                 const deceleration = 0.003;
-                
                 let tickCount = 0;
                 
                 const spin = () => {
-                    state.wheelAngle += spinVelocity;
-                    spinVelocity -= deceleration;
-                    
+                    state.wheelAngle += spinVelocity; spinVelocity -= deceleration;
                     tickCount += spinVelocity;
-                    if(tickCount > 0.5) {
-                        playSound('tick');
-                        tickCount = 0;
-                    }
+                    if(tickCount > 0.5) { playSound('tick'); tickCount = 0; }
                     
                     if (spinVelocity > 0) {
-                        CQ.drawWheel();
-                        requestAnimationFrame(spin);
+                        CQ.drawWheel(); requestAnimationFrame(spin);
                     } else {
-                        state.isSpinning = false;
-                        btn.disabled = false;
-                        btn.classList.remove('opacity-50');
+                        state.isSpinning = false; btn.disabled = false; btn.classList.remove('opacity-50');
                         CQ.drawWheel();
-                        
                         const sliceAngle = (2 * Math.PI) / state.wheelStudents.length;
                         let normalizedAngle = state.wheelAngle % (2 * Math.PI);
                         if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
-                        
                         const pointerAngle = (1.5 * Math.PI - normalizedAngle + 2 * Math.PI) % (2 * Math.PI);
-                        const winnerIndex = Math.floor(pointerAngle / sliceAngle);
-                        const winner = state.wheelStudents[winnerIndex];
+                        const winner = state.wheelStudents[Math.floor(pointerAngle / sliceAngle)];
                         
                         setTimeout(() => {
-                            playSound('levelup');
-                            shootConfetti();
-                            
+                            playSound('levelup'); shootConfetti();
                             const disp = document.getElementById('wheel-winner-display');
                             const card = document.getElementById('wheel-winner-card');
                             document.getElementById('wheel-winner-name').innerText = winner.zh;
                             document.getElementById('wheel-winner-sub').innerText = `Seat ${winner.seat} | ${winner.en || ''}`;
-                            disp.classList.remove('hidden');
-                            disp.classList.add('flex');
-                            
+                            disp.classList.remove('hidden'); disp.classList.add('flex');
                             setTimeout(() => {
-                                card.classList.remove('scale-0');
-                                card.classList.add('scale-100');
+                                card.classList.remove('scale-0'); card.classList.add('scale-100');
                                 state.modalTargetId = winner.id;
                             }, 50);
-                            
                         }, 500);
                     }
                 };
@@ -1370,272 +1259,224 @@
             closeWheelWinner: () => {
                 const disp = document.getElementById('wheel-winner-display');
                 const card = document.getElementById('wheel-winner-card');
-                card.classList.remove('scale-100');
-                card.classList.add('scale-0');
-                setTimeout(() => {
-                    disp.classList.add('hidden');
-                    disp.classList.remove('flex');
-                }, 300);
+                card.classList.remove('scale-100'); card.classList.add('scale-0');
+                setTimeout(() => { disp.classList.add('hidden'); disp.classList.remove('flex'); }, 300);
             },
             awardWinnerAndClose: () => {
                 if(state.modalTargetId) {
                     processPoint(state.modalTargetId, 1);
-                    syncData();
+                    syncData(); CQ.renderGrid(); CQ.checkLevelUpQueue();
                     showToast(`已為中獎者加 1 分！`, 'success');
                 }
-                CQ.closeWheelWinner();
-                CQ.closeWheel();
+                CQ.closeWheelWinner(); CQ.closeWheel();
             },
 
-            openTimer: () => {
-                document.getElementById('timer-modal').classList.remove('hidden');
-                CQ.updateTimerDisplay();
-            },
-            closeTimer: () => {
-                document.getElementById('timer-modal').classList.add('hidden');
-            },
+            // 計時器
+            openTimer: () => { document.getElementById('timer-modal').classList.remove('hidden'); CQ.updateTimerDisplay(); },
+            closeTimer: () => document.getElementById('timer-modal').classList.add('hidden'),
             updateTimerDisplay: () => {
                 const el = document.getElementById('timer-display');
                 const m = Math.floor(state.timerSeconds / 60).toString().padStart(2, '0');
                 const s = (state.timerSeconds % 60).toString().padStart(2, '0');
                 el.innerText = `${m}:${s}`;
-                
-                if(state.timerSeconds <= 10 && state.timerSeconds > 0) {
-                    el.classList.add('timer-alert');
-                } else {
-                    el.classList.remove('timer-alert');
-                }
+                el.classList.toggle('timer-alert', state.timerSeconds <= 10 && state.timerSeconds > 0);
             },
-            addTimer: (secs) => {
-                state.timerSeconds = Math.max(0, state.timerSeconds + secs);
-                CQ.updateTimerDisplay();
-            },
-            resetTimer: () => {
-                state.timerSeconds = 300;
-                CQ.updateTimerDisplay();
-                if(state.isTimerRunning) CQ.toggleTimer();
-            },
+            addTimer: (secs) => { state.timerSeconds = Math.max(0, state.timerSeconds + secs); CQ.updateTimerDisplay(); },
+            resetTimer: () => { state.timerSeconds = 300; CQ.updateTimerDisplay(); if(state.isTimerRunning) CQ.toggleTimer(); },
             toggleTimer: () => {
                 const btn = document.getElementById('btn-timer-toggle');
                 if(state.isTimerRunning) {
-                    clearInterval(state.timerInterval);
-                    state.isTimerRunning = false;
-                    btn.innerText = "▶ 開始";
-                    btn.classList.replace('bg-amber-600', 'bg-blue-600');
-                    btn.classList.replace('hover:bg-amber-500', 'hover:bg-blue-500');
+                    clearInterval(state.timerInterval); state.isTimerRunning = false;
+                    btn.innerText = "▶ 開始"; btn.classList.replace('bg-amber-600', 'bg-blue-600'); btn.classList.replace('hover:bg-amber-500', 'hover:bg-blue-500');
                 } else {
                     if(state.timerSeconds <= 0) return;
                     state.isTimerRunning = true;
-                    btn.innerText = "⏸ 暫停";
-                    btn.classList.replace('bg-blue-600', 'bg-amber-600');
-                    btn.classList.replace('hover:bg-blue-500', 'hover:bg-amber-500');
-                    
+                    btn.innerText = "⏸ 暫停"; btn.classList.replace('bg-blue-600', 'bg-amber-600'); btn.classList.replace('hover:bg-blue-500', 'hover:bg-amber-500');
                     state.timerInterval = setInterval(() => {
                         state.timerSeconds--;
-                        
-                        if(state.timerSeconds <= 10 && state.timerSeconds > 0) {
-                            playSound('tick');
-                        }
-                        
+                        if(state.timerSeconds <= 10 && state.timerSeconds > 0) playSound('tick');
                         CQ.updateTimerDisplay();
-                        
                         if(state.timerSeconds <= 0) {
-                            clearInterval(state.timerInterval);
-                            state.isTimerRunning = false;
-                            btn.innerText = "▶ 開始";
-                            btn.classList.replace('bg-amber-600', 'bg-blue-600');
-                            btn.classList.replace('hover:bg-amber-500', 'hover:bg-blue-500');
-                            playSound('alarm');
-                            document.body.classList.add('shake-screen');
+                            clearInterval(state.timerInterval); state.isTimerRunning = false;
+                            btn.innerText = "▶ 開始"; btn.classList.replace('bg-amber-600', 'bg-blue-600'); btn.classList.replace('hover:bg-amber-500', 'hover:bg-blue-500');
+                            playSound('alarm'); document.body.classList.add('shake-screen');
                             setTimeout(()=>document.body.classList.remove('shake-screen'), 1000);
                         }
                     }, 1000);
                 }
             },
 
-            openRecovery: () => {
-                document.getElementById('recovery-modal').classList.remove('hidden');
-                document.getElementById('recovery-log').innerHTML = "等待指示中... 點擊上方按鈕開始掃描。";
-                document.getElementById('recovery-actions').classList.add('hidden');
-            },
-            closeRecovery: () => {
-                document.getElementById('recovery-modal').classList.add('hidden');
-            },
-            scanLocalStorage: () => {
+            // 救援與 CSV 匯入
+            openRecovery: () => document.getElementById('recovery-modal').classList.remove('hidden'),
+            closeRecovery: () => document.getElementById('recovery-modal').classList.add('hidden'),
+            handleCSVImport: (event) => {
+                const files = event.target.files;
+                if(files.length === 0) return;
                 const log = document.getElementById('recovery-log');
-                const actions = document.getElementById('recovery-actions');
-                log.innerHTML = "=== 開始執行底層記憶體深度掃描 ===\n";
+                log.innerHTML = "=== 開始讀取 CSV 檔案 ===\n";
                 
-                const best = findBestHistoricalData();
-                
-                if(!best.data) {
-                    log.innerHTML += `\n❌ 掃描完畢。\n無法在此電腦記憶體中找到紀錄。\n請確認您是否使用與加分時「同一台電腦」和「同一個瀏覽器」。`;
-                } else {
-                    window._recoveryBestData = best.data;
-                    let studentCount = Object.keys(best.data).filter(k => best.data[k].class).length;
-                    log.innerHTML += `\n🔍 發現最強紀錄檔！\n   -> 包含 ${studentCount} 位學生\n   -> 系統判定此為分組與 XP 最完整的備份。\n`;
-                    log.innerHTML += `\n✅ 掃描完成！\n>>> 請點擊下方綠色按鈕，強制覆蓋回系統！ <<<`;
-                    actions.classList.remove('hidden');
-                }
-            },
-            forceRestoreData: () => {
-                if(window._recoveryBestData) {
-                    state.students = mergeWithRawRosters(window._recoveryBestData);
-                    localStorage.setItem('classquest_offline_v8', JSON.stringify(state.students));
-                    CQ.closeRecovery();
-                    showToast("✅ 終極救援成功！名單與加分紀錄已全面修復。", "success");
-                    CQ.renderAll();
-                    syncData(true);
-                }
+                let processed = 0;
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const text = e.target.result;
+                        const lines = text.split('\n');
+                        let count = 0;
+                        
+                        let fileClassMatch = file.name.match(/(\d+)班/);
+                        let fileClass = fileClassMatch ? fileClassMatch[1] : null;
+
+                        for(let i=1; i<lines.length; i++) {
+                            if(!lines[i].trim()) continue;
+                            const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim());
+                            if(cols.length < 5) continue;
+
+                            let sClass = fileClass;
+                            let seatStr = cols[0] || cols[1]; 
+                            if(seatStr.startsWith('=')) seatStr = seatStr.replace(/[^0-9]/g, '');
+                            let seat = seatStr.padStart(2, '0');
+                            let zh = cols[1] || cols[2];
+                            let en = cols[2] || cols[3];
+                            let groupStr = cols[3] || cols[4];
+                            let jobStr = (cols[4] || cols[5] || '').toLowerCase();
+                            let xp = parseInt(cols[7] || cols[6] || cols[5] || '0') || 0;
+
+                            if(!sClass && cols[0].length >= 3) sClass = cols[0];
+
+                            let job = 'none';
+                            if(jobStr.includes('hero')||jobStr.includes('戰士')) job = 'hero';
+                            if(jobStr.includes('magician')||jobStr.includes('魔法')) job = 'magician';
+                            if(jobStr.includes('royal')||jobStr.includes('皇族')||jobStr.includes('prince')) job = 'royal';
+                            if(jobStr.includes('hunter')||jobStr.includes('獵人')) job = 'hunter';
+                            if(jobStr.includes('beast')||jobStr.includes('野獸')) job = 'beast';
+
+                            let group = 0;
+                            let gMatch = groupStr.match(/(\d+)/);
+                            if(gMatch) group = parseInt(gMatch[1]);
+
+                            if(sClass && seat && zh) {
+                                const id = `${sClass}-${seat}`;
+                                if(!state.students[id]) {
+                                    state.students[id] = { id, class: sClass, seat, zh, history: {}, todayPts: 0, absent: false, nameColor:'', prizeIcon:'' };
+                                }
+                                state.students[id].en = en;
+                                state.students[id].group = group;
+                                state.students[id].job = job;
+                                state.students[id].xp = xp;
+                                count++;
+                            }
+                        }
+                        log.innerHTML += `\n✅ 成功讀取檔案: ${file.name}，更新了 ${count} 位學生資料。`;
+                        processed++;
+                        if(processed === files.length) {
+                            log.innerHTML += `\n\n🎉 全部匯入完成！資料已覆蓋回系統。請關閉此視窗。`;
+                            syncData(); CQ.renderAll();
+                        }
+                    };
+                    reader.readAsText(file);
+                });
             },
 
             renderEditList: () => {
                 const tbody = document.getElementById('edit-table-body');
                 tbody.innerHTML = '';
-                
-                const classStudents = Object.values(state.students)
-                    .filter(s => s.class === state.activeClass)
-                    .sort((a,b) => parseInt(a.seat) - parseInt(b.seat));
-
-                classStudents.forEach(s => {
-                    const row = document.createElement('tr');
-                    row.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors';
-                    
+                Object.values(state.students).filter(s => s.class === state.activeClass).sort((a,b) => parseInt(a.seat) - parseInt(b.seat)).forEach(s => {
                     let groupOptions = `<option value="0">無</option>`;
-                    for(let i=1; i<=8; i++) {
-                        groupOptions += `<option value="${i}" ${(s.group || 0) === i ? 'selected' : ''}>第 ${i} 組</option>`;
-                    }
-
-                    row.innerHTML = `
-                        <td class="p-3 font-bold text-slate-500">${s.seat}</td>
-                        <td class="p-3 font-bold text-slate-800">${s.zh} ${s.absent?'<span class="text-xs bg-red-100 text-red-600 px-1 rounded">請假</span>':''}</td>
-                        <td class="p-3">
-                            <input type="text" value="${s.en}" onblur="CQ.updateEnName('${s.id}', this.value)" class="border-2 border-slate-200 rounded px-2 py-1 outline-none focus:border-blue-500 w-32" placeholder="無">
-                        </td>
-                        <td class="p-3 text-center">
-                            <select onchange="CQ.updateGroup('${s.id}', this.value)" class="border border-slate-200 rounded p-1 outline-none bg-white font-bold text-purple-700">
-                                ${groupOptions}
-                            </select>
-                        </td>
-                        <td class="p-3 text-sm text-slate-600">${JOBS[s.job]?.name || '平民'}</td>
-                        <td class="p-3 font-bold text-slate-700">${s.xp} / <span class="${s.todayPts>=0?'text-green-500':'text-red-500'}">${s.todayPts>0?'+':''}${s.todayPts}</span></td>
-                        <td class="p-3 text-center">
-                            <button onclick="CQ.removeStudent('${s.id}')" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">刪除</button>
-                        </td>
+                    for(let i=1; i<=8; i++) groupOptions += `<option value="${i}" ${(s.group||0)===i?'selected':''}>第 ${i} 組</option>`;
+                    
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50">
+                            <td class="p-3 font-bold text-slate-500">${s.seat}</td>
+                            <td class="p-3 font-bold text-slate-800">${s.zh} ${s.absent?'<span class="text-xs bg-red-100 text-red-600 px-1 rounded">請假</span>':''}</td>
+                            <td class="p-3"><input type="text" value="${s.en}" onblur="CQ.updateEnName('${s.id}', this.value)" class="border-2 border-slate-200 rounded px-2 py-1 outline-none focus:border-blue-500 w-32" placeholder="無"></td>
+                            <td class="p-3 text-center"><select onchange="CQ.updateGroup('${s.id}', this.value)" class="border border-slate-200 rounded p-1 outline-none bg-white font-bold text-purple-700">${groupOptions}</select></td>
+                            <td class="p-3 text-sm text-slate-600">${JOBS[s.job]?.name || '平民'}</td>
+                            <td class="p-3 font-bold text-slate-700">${s.xp} / <span class="${s.todayPts>=0?'text-green-500':'text-red-500'}">${s.todayPts>0?'+':''}${s.todayPts}</span></td>
+                            <td class="p-3 text-center"><button onclick="CQ.removeStudent('${s.id}')" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg">刪除</button></td>
+                        </tr>
                     `;
-                    tbody.appendChild(row);
                 });
             },
-            updateEnName: (id, newName) => {
-                if(state.students[id] && state.students[id].en !== newName.trim()) {
-                    state.students[id].en = newName.trim();
-                    syncData();
-                }
-            },
-            updateGroup: (id, groupVal) => {
-                if(state.students[id]) {
-                    state.students[id].group = parseInt(groupVal);
-                    syncData();
-                }
-            },
+            updateEnName: (id, val) => { if(state.students[id]) { state.students[id].en = val.trim(); syncData(); } },
+            updateGroup: (id, val) => { if(state.students[id]) { state.students[id].group = parseInt(val); syncData(); } },
             addStudent: () => {
                 const seat = document.getElementById('new-seat').value.padStart(2, '0');
                 const zh = document.getElementById('new-name').value.trim();
                 const en = document.getElementById('new-en').value.trim();
                 const group = parseInt(document.getElementById('new-group').value);
                 if(!seat || !zh || seat === '00') return showToast("請輸入座號與中文名", "error");
-                
                 const id = `${state.activeClass}-${seat}`;
                 if(state.students[id]) return showToast("此座號已存在！", "error");
 
-                state.students[id] = {
-                    id, class: state.activeClass, seat, zh, en, group,
-                    job: 'none', xp: 0, todayPts: 0, history: {}, absent: false
-                };
-                
-                document.getElementById('new-seat').value = '';
-                document.getElementById('new-name').value = '';
-                document.getElementById('new-en').value = '';
-                document.getElementById('new-group').value = '0';
-                
-                syncData();
-                CQ.renderEditList();
-                showToast("新增成功！", "success");
+                state.students[id] = { id, class: state.activeClass, seat, zh, en, group, job: 'none', xp: 0, todayPts: 0, history: {}, absent: false, nameColor:'', prizeIcon:'' };
+                document.getElementById('new-seat').value = ''; document.getElementById('new-name').value = ''; document.getElementById('new-en').value = ''; document.getElementById('new-group').value = '0';
+                syncData(); CQ.renderEditList(); showToast("新增成功！", "success");
             },
             removeStudent: (id) => {
-                askConfirm("確定刪除此學生？相關分數紀錄將永久遺失！", () => {
-                    delete state.students[id];
-                    syncData();
-                    CQ.renderEditList();
-                    showToast("已刪除該學生", "success");
-                });
+                askConfirm("確定刪除此學生？", () => { delete state.students[id]; syncData(); CQ.renderEditList(); showToast("已刪除", "success"); });
             },
 
+            // 🌟 報表與平常成績計算 (75 + XP/2 + 本週結算) 🌟
             renderReport: () => {
                 const weekSel = document.getElementById('report-week-selector');
                 const targetWeek = weekSel.value || state.currentWeek;
-                
                 const allWeeks = new Set([state.currentWeek]);
-                Object.values(state.students).forEach(s => {
-                    Object.keys(s.history || {}).forEach(w => allWeeks.add(w));
-                });
-                
+                Object.values(state.students).forEach(s => Object.keys(s.history || {}).forEach(w => allWeeks.add(w)));
                 weekSel.innerHTML = '';
-                Array.from(allWeeks).sort().reverse().forEach(w => {
-                    weekSel.innerHTML += `<option value="${w}">${w.replace('-W', ' 年第 ')} 週 ${w===state.currentWeek?'(本週)':''}</option>`;
-                });
+                Array.from(allWeeks).sort().reverse().forEach(w => weekSel.innerHTML += `<option value="${w}">${w.replace('-W', ' 年第 ')} 週 ${w===state.currentWeek?'(本週)':''}</option>`);
                 weekSel.value = targetWeek;
 
                 const tbody = document.getElementById('report-table-body');
                 tbody.innerHTML = '';
-                
-                const classStudents = Object.values(state.students)
-                    .filter(s => s.class === state.activeClass)
-                    .sort((a,b) => parseInt(a.seat) - parseInt(b.seat));
-
-                classStudents.forEach(s => {
-                    const wHist = (s.history || {})[targetWeek] || { pos: 0, neg: 0 };
+                Object.values(state.students).filter(s => s.class === state.activeClass).sort((a,b) => parseInt(a.seat) - parseInt(b.seat)).forEach(s => {
+                    const wHist = (s.history && s.history[targetWeek]) ? s.history[targetWeek] : { pos: 0, neg: 0 };
                     const totalWeek = wHist.pos + wHist.neg;
                     const finalScore = Math.min(100, Math.max(0, 75 + Math.floor(s.xp * 0.5) + totalWeek));
                     const lvl = getLevel(s.xp);
-                    const rank = getRank(lvl);
 
-                    const row = document.createElement('tr');
-                    row.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors';
-                    row.innerHTML = `
-                        <td class="p-3 font-bold text-slate-500">${s.seat}</td>
-                        <td class="p-3 font-bold text-slate-800">${s.zh} ${s.en ? `<span class="text-sm text-slate-400 font-normal">(${s.en})</span>`:''}</td>
-                        <td class="p-3 text-sm text-slate-600">${JOBS[s.job]?.name||'平民'} Lv.${lvl} (R${rank})</td>
-                        <td class="p-3 font-bold text-green-600">+${wHist.pos}</td>
-                        <td class="p-3 font-bold text-red-500">${wHist.neg}</td>
-                        <td class="p-3 font-bold text-indigo-700 text-lg">${totalWeek > 0 ? '+'+totalWeek : totalWeek}</td>
-                        <td class="p-3 font-bold text-amber-700 bg-amber-50 text-center">${finalScore}</td>
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50">
+                            <td class="p-3 font-bold text-slate-500">${s.seat}</td>
+                            <td class="p-3 font-bold text-slate-800">${s.zh} ${s.en ? `<span class="text-sm text-slate-400 font-normal">(${s.en})</span>`:''}</td>
+                            <td class="p-3 text-sm text-slate-600">${JOBS[s.job]?.name||'平民'} Lv.${lvl}</td>
+                            <td class="p-3 font-bold text-green-600">+${wHist.pos}</td>
+                            <td class="p-3 font-bold text-red-500">${wHist.neg}</td>
+                            <td class="p-3 font-bold text-indigo-700 text-lg">${totalWeek > 0 ? '+'+totalWeek : totalWeek}</td>
+                            <td class="p-3 font-bold text-amber-700 bg-amber-50 text-center">${finalScore}</td>
+                        </tr>
                     `;
-                    tbody.appendChild(row);
                 });
             },
             exportCSV: () => {
                 const targetWeek = document.getElementById('report-week-selector').value;
                 let csv = "座號,中文名,英文名,組別,職業,等級(Level),階級(Rank),總XP,本週加分,本週扣分,本週總結算,平時成績預估\n";
-                
-                Object.values(state.students)
-                    .filter(s => s.class === state.activeClass)
-                    .sort((a,b) => parseInt(a.seat) - parseInt(b.seat))
-                    .forEach(s => {
-                        const wHist = (s.history || {})[targetWeek] || { pos: 0, neg: 0 };
-                        const totalWeek = wHist.pos + wHist.neg;
-                        const finalScore = Math.min(100, Math.max(0, 75 + Math.floor(s.xp * 0.5) + totalWeek));
-                        const gStr = s.group > 0 ? `第${s.group}組` : '無';
-                        const lvl = getLevel(s.xp);
-                        const rank = getRank(lvl);
-                        csv += `="${s.seat}",${s.zh},${s.en},${gStr},${JOBS[s.job]?.name||'平民'},${lvl},${rank},${s.xp},${wHist.pos},${wHist.neg},${totalWeek},${finalScore}\n`;
-                    });
-
+                Object.values(state.students).filter(s => s.class === state.activeClass).sort((a,b) => parseInt(a.seat) - parseInt(b.seat)).forEach(s => {
+                    const wHist = (s.history && s.history[targetWeek]) ? s.history[targetWeek] : { pos: 0, neg: 0 };
+                    const totalWeek = wHist.pos + wHist.neg;
+                    const finalScore = Math.min(100, Math.max(0, 75 + Math.floor(s.xp * 0.5) + totalWeek));
+                    const gStr = s.group > 0 ? `第${s.group}組` : '無';
+                    const lvl = getLevel(s.xp);
+                    csv += `="${s.seat}",${s.zh},${s.en},${gStr},${JOBS[s.job]?.name||'平民'},${lvl},${getRank(lvl)},${s.xp},${wHist.pos},${wHist.neg},${totalWeek},${finalScore}\n`;
+                });
                 const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = `${state.activeClass}班_${targetWeek}_平時成績表.csv`;
-                link.click();
+                const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${state.activeClass}班_${targetWeek}_平時成績表.csv`; link.click();
+            },
+            exportTodayCSV: () => {
+                const todayStr = new Date().toLocaleDateString('zh-TW');
+                let csv = "班級,座號,中文名,英文名,組別,今日結算分數,累積總XP\n";
+                let hasData = false;
+                const allClasses = [...new Set(Object.values(state.students).map(s => s.class).filter(c=>c))].sort();
+                allClasses.forEach(c => {
+                    Object.values(state.students).filter(s => s.class === c).sort((a,b) => parseInt(a.seat) - parseInt(b.seat)).forEach(s => {
+                        const gStr = s.group > 0 ? `第${s.group}組` : '無';
+                        csv += `${c},="${s.seat}",${s.zh},${s.en},${gStr},${s.todayPts},${s.xp}\n`;
+                        hasData = true;
+                    });
+                });
+                if(!hasData) return showToast("目前沒有學生資料可匯出", "error");
+                const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `ClassQuest_全校今日成績_${todayStr.replace(/\//g, '-')}.csv`; link.click();
+                showToast("✅ 已為您匯出所有班級的今日成績表！", "success");
             },
             showRules: () => document.getElementById('rules-modal').classList.remove('hidden'),
             closeRules: () => document.getElementById('rules-modal').classList.add('hidden')
@@ -1646,8 +1487,6 @@
             if(s.absent) return; 
             
             const oldLvl = getLevel(s.xp);
-            const oldRank = getRank(oldLvl);
-            
             s.xp = Math.max(0, s.xp + pts);
             s.todayPts += pts;
 
@@ -1659,33 +1498,19 @@
             const el = document.getElementById(`card-${id}`);
             if (el) {
                 const rect = el.getBoundingClientRect();
-                createFloatingText(
-                    rect.left + rect.width/2 - 20, 
-                    rect.top + window.scrollY + 10, 
-                    pts > 0 ? `+${pts}` : pts, 
-                    pts > 0 ? '#10b981' : '#ef4444'
-                );
+                createFloatingText(rect.left + rect.width/2 - 20, rect.top + window.scrollY + 10, pts > 0 ? `+${pts}` : pts, pts > 0 ? '#10b981' : '#ef4444');
+                if(pts > 0) playSound('coin');
             }
 
             const newLvl = getLevel(s.xp);
-            const newRank = getRank(newLvl);
-
+            // 🌟 升級抽獎判定 🌟
             if (newLvl > oldLvl) {
-                setTimeout(() => {
-                    playSound('levelup');
-                    shootConfetti();
-                    if (newRank > oldRank) {
-                        showToast(`🎉 太神啦！${s.zh} 升到了 Level ${newLvl}，且進化為 Rank ${newRank}！`, 'success');
-                    } else {
-                        showToast(`🎉 恭喜！${s.zh} 升級到 Level ${newLvl} 了！`, 'success');
-                    }
-                }, 800);
+                state.levelUpQueue.push({ id: s.id, oldLvl, newLvl });
             }
         }
 
         initFirebase();
         checkDailyReset();
-
     </script>
 </body>
 </html>
